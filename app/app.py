@@ -1,6 +1,7 @@
 from beanie import init_beanie
 from fastapi import Depends, FastAPI, HTTPException, status
 
+from fastapi.middleware.cors import CORSMiddleware
 from db import User, db
 from schemas import UserCreate, UserRead, UserUpdate
 from users import auth_backend, current_active_user, fastapi_users,google_oauth_client
@@ -33,6 +34,15 @@ from botocore.exceptions import NoCredentialsError
 import asyncio
 
 app = FastAPI()
+
+# Define CORS origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 ###################################################################################
 # Mount the static directory for serving images

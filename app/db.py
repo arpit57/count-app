@@ -5,11 +5,11 @@ from beanie import Document
 from fastapi_users.db import BaseOAuthAccount, BeanieBaseUser, BeanieUserDatabase
 from pydantic import Field
 
-DATABASE_URL = "mongodb://localhost:27017"
+DATABASE_URL = "mongodb+srv://alvisionpi:k91f0hxBQ0DeX3OW@atlascluster.2jvy8lq.mongodb.net/alvisionpi?retryWrites=true"
 client = motor.motor_asyncio.AsyncIOMotorClient(
     DATABASE_URL, uuidRepresentation="standard"
 )
-db = client["database_name"]
+db = client["alvisionpi"]
 
 
 class OAuthAccount(BaseOAuthAccount):
