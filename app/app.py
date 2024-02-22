@@ -21,7 +21,7 @@ from io import BytesIO
 import cv2
 import base64
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 
 import numpy as np
 from contextlib import asynccontextmanager
@@ -94,9 +94,6 @@ def count_objects_from_base64(circles, base64_str):
 
 class CountRequest(BaseModel):
     base64_image: str
-    conf: float = DEFAULT_CONFIDENCE_THRESHOLD
-    iou: float = DEFAULT_IOU_THRESHOLD
-    size: int = DEFAULT_IMAGE_SIZE
 
 def upload_to_s3(file_name, bucket_name, object_name=None):
     """
@@ -191,6 +188,16 @@ async def get_user_counts(user: User = Depends(current_active_user)):
     Retrieve count data for the currently logged-in user.
     """
     return user.counts
+
+@app.get("/user-counts/{date}", response_model=List[Dict])
+async def get_user_counts_by_date(date: date, user: User = Depends(current_active_user)):
+    """
+    Retrieve count data for the currently logged-in user for a specific date.
+    """
+    # Filter the counts for the given date
+    filtered_counts = [count for count in user.counts if count["Date"] == date.isoformat()]
+    return filtered_counts
+
 
 ###################################################################################
 

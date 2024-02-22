@@ -106,6 +106,7 @@ class DetectCircle:
         self.thickness = 7
 
     def process_image(self, source):
+        self.count_circle = 0
         try:
             self.original = source.copy()
             gray = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
