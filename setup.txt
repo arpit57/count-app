@@ -1,0 +1,30 @@
+sudo apt update
+
+# if python not installed already
+sudo apt install python3.8 python3.8-venv python3.8-dev -y 
+
+# installing dependencies in base environment
+sudo apt install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
+libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev \
+xz-utils tk-dev libffi-dev liblzma-dev python-openssl git 
+sudo apt install libcairo2-dev libgirepository1.0-dev pkg-config python3-dev -y
+sudo apt install libcairo2-dev libgirepository1.0-dev pkg-config python3-dev -y
+sudo apt-get install librsync-dev
+sudo apt-get install libcups2-dev
+
+# creating a new environemnt
+python3.8 -m venv myenv
+source myenv/bin/activate
+
+# more commands
+pip install wheel
+pip install -r requirements.txt
+
+# starting fastAPI
+cd countApp/app
+uvicorn app:app
+
+# to fix authentication issue(if any)
+pip uninstall jwt
+pip uninstall PyJWT
+pip install PyJWT
