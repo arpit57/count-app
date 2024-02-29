@@ -28,10 +28,7 @@ from contextlib import asynccontextmanager
 
 from detect_circles_nomask import DetectCircle
 
-import boto3
-from botocore.exceptions import NoCredentialsError
-
-import asyncio
+from aws_config import AWSConfig
 
 app = FastAPI()
 
@@ -51,18 +48,9 @@ app.mount("/static", StaticFiles(directory="../static"), name="static")
 # Jinja2 templates for HTML rendering
 templates = Jinja2Templates(directory="../templates")
 
-# Load the YOLOv5 model
-# def load_yolo_model():
-#     return torch.hub.load("ultralytics/yolov5", "custom", path="../model/yolov5n_rebar_kaggle.pt", device="0")
-
-# Initialize YOLOv5 model
-# yolo_model = load_yolo_model()
 circles = DetectCircle()
+aws_config = AWSConfig()
 
-# Default values for confidence threshold, IoU threshold, and image size
-DEFAULT_CONFIDENCE_THRESHOLD = 0.25
-DEFAULT_IOU_THRESHOLD = 0.1
-DEFAULT_IMAGE_SIZE = 640
 
 
 async def save_base64_image(base64_str, image_path):
@@ -88,37 +76,11 @@ def count_objects_from_base64(circles, base64_str):
         return None, "Error processing image"
     imge, ellips, _ = result
 
-    # imge, ellips, _ = circles.process_image(im)
-
     return imge, f"{ellips} objects"
 
 class CountRequest(BaseModel):
     base64_image: str
 
-def upload_to_s3(file_name, bucket_name, object_name=None):
-    """
-    Upload a file to an S3 bucket
-
-    :param file_name: File to upload
-    :param bucket_name: Bucket to upload to
-    :param object_name: S3 object name. If not specified, file_name is used
-    :return: True if file was uploaded, else False
-    """
-    # If S3 object_name was not specified, use file_name
-    if object_name is None:
-        object_name = file_name
-
-    # Upload the file
-    s3_client = boto3.client('s3')
-    try:
-        response = s3_client.upload_file(file_name, bucket_name, object_name)
-        # After upload, get the file's URL
-        location = s3_client.get_bucket_location(Bucket=bucket_name)['LocationConstraint']
-        url = f"https://{bucket_name}.s3.{location}.amazonaws.com/{object_name}"
-        return url
-    except NoCredentialsError:
-        print("Credentials not available")
-        return None
 
 # Update the /count route
 @app.post("/count")
@@ -140,14 +102,9 @@ async def count(
 
     bucket_name = 'pi-processed-images'  # Replace with your new bucket name
     object_name = f"processed_{uuid.uuid4()}.png"  # You can use the same name as local or a different one
-    s3_image_url = upload_to_s3(processed_image_path, bucket_name, object_name)
+    # s3_image_url = upload_to_s3(processed_image_path, bucket_name, object_name)
+    s3_image_url = aws_config.upload_to_s3(processed_image_path, bucket_name, object_name)
 
-    # Store count information directly in the user's counts field
-    # count_info = {
-    #     "count_text": count_text,
-    #     "processed_image_path": processed_image_path,
-    #     "timestamp": datetime.utcnow(),
-    # }
     current_utc_datetime = datetime.utcnow()
 
     # Split the datetime into date and time components
@@ -214,15 +171,6 @@ async def authenticated_route(user: User = Depends(current_active_user)):
     return {"message": f"Hello {user.email}!"}
 
 
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     # Startup tasks
-#     await init_beanie(
-#         "mongodb://localhost:27017",
-#         database=db,
-#         document_models=User,
-#     )
 @app.on_event("startup")
 async def on_startup():
     await init_beanie(
