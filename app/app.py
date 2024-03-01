@@ -177,3 +177,7 @@ async def on_startup():
         database=db,
         document_models=[User]
     )
+
+@app.get("/")
+async def health_check():
+    return {"status": "UP"}
