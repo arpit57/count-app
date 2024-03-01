@@ -180,4 +180,4 @@ async def on_startup():
 
 @app.get("/")
 async def health_check():
-    return {"status": "UP"}
+    return {"status": "UP2"}
