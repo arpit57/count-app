@@ -22,4 +22,4 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: arpit57/count-app:latest
+        tags: arpit75/count-app:latest
