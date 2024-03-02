@@ -13,7 +13,8 @@ if __name__ == "__main__":
         "app:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,
-        ssl_keyfile=ssl_keyfile_path,
-        ssl_certfile=ssl_certfile_path
+        reload=True
+        # ,
+        # ssl_keyfile=ssl_keyfile_path,
+        # ssl_certfile=ssl_certfile_path
     )
