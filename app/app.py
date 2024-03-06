@@ -1,12 +1,10 @@
 from beanie import init_beanie
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, UploadFile
 
 from fastapi.middleware.cors import CORSMiddleware
 from db import User, db
 from schemas import UserCreate, UserRead, UserUpdate
 from users import auth_backend, current_active_user, fastapi_users,google_oauth_client
-from fastapi import FastAPI, File, UploadFile, Form
-from fastapi.responses import HTMLResponse,  JSONResponse
 
 from typing import List, Dict
 from fastapi.staticfiles import StaticFiles
@@ -15,16 +13,13 @@ from pydantic import BaseModel
 
 
 from fastapi.templating import Jinja2Templates
-import torch
 from PIL import Image
-from io import BytesIO
 import cv2
 import base64
 import uuid
 from datetime import datetime, date
 
 import numpy as np
-from contextlib import asynccontextmanager
 
 from detect_circles_nomask import DetectCircle
 
@@ -89,10 +84,10 @@ async def count(
     count_request: CountRequest,
     user: User = Depends(current_active_user)
 ):
-    try:
-        image_path = await save_base64_image(count_request.base64_image, f"../static/{uuid.uuid4()}.png")
-    except ValueError as e:
-        return {"error": str(e)}
+    # try:
+    #     image_path = await save_base64_image(count_request.base64_image, f"../static/{uuid.uuid4()}.png")
+    # except ValueError as e:
+    #     return {"error": str(e)}
 
     processed_img, count_text = count_objects_from_base64(circles, count_request.base64_image)
     processed_pil = Image.fromarray(processed_img)

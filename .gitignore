@@ -1,3 +1,4 @@
 static/*
 !static/.gitkeep
 app/__pycache__
+playground-1.mongodb.js

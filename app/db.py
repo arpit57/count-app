@@ -1,4 +1,4 @@
-from typing import List, Dict, Union, Any
+from typing import List, Dict, Any
 
 import motor.motor_asyncio
 from beanie import Document
