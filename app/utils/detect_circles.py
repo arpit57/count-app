@@ -1,16 +1,12 @@
-import os
 import time
 
 import cv2
 import cv2 as cv
-from threading import Thread
 from datetime import datetime
-from .data_preprocessing1 import Preprocess
+from data_preprocessing import Preprocess
 import numpy as np
 import math
-import pandas as pd
 # from sklearn.cluster import KMeans
-from matplotlib import pyplot as plt
 
 
 def radius_of_ellipse(major_axis_length, minor_axis_length):
@@ -170,9 +166,6 @@ class DetectCircle:
 
                 self.ellipses = self.ed.detectEllipses()
 
-                centers = set()
-
-                radius_data = set()
                 self.count_circle = 0
                 if self.ellipses is not None:
                     size_threshold = 4.5

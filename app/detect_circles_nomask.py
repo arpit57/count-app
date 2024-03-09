@@ -1,15 +1,8 @@
-import os
-import time
-
 import cv2
 import cv2 as cv
-from threading import Thread
-from datetime import datetime
 import numpy as np
 import math
-import pandas as pd
-# from sklearn.cluster import KMeans
-from matplotlib import pyplot as plt
+
 
 
 def radius_of_ellipse(major_axis_length, minor_axis_length):

@@ -1,9 +1,7 @@
 import os
 import cv2
-import glob
 import numpy as np
 from ultralytics import YOLO
-import time
 
 
 # from enlighten_inference import EnlightenOnnxModel
@@ -70,11 +68,11 @@ class Preprocess:
         self.output_path = os.path.join(self.base_path, "output_test")
 
         self.folder_list = [self.img_path, self.model_path, self.output_path]
-        if os.path.exists(self.output_path) == False:
+        if not os.path.exists(self.output_path):
             os.mkdir(self.output_path)
-        if os.path.exists(self.model_path) == False:
+        if not os.path.exists(self.model_path):
             os.mkdir(self.model_path)
-        if os.path.exists(self.img_path) == False:
+        if not os.path.exists(self.img_path):
             os.mkdir(self.img_path)
         return self.output_path, self.img_path, self.model_path
 
@@ -101,7 +99,7 @@ class Preprocess:
 
             self.results = self.model.predict(load_image, retina_masks=True)
 
-            if self.results[0].masks == None:
+            if self.results[0].masks is None:
                 print("No Mask Found")
                 return load_image, load_image, None
             for result in self.results:
