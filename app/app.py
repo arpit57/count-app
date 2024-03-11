@@ -18,10 +18,14 @@ import cv2
 import base64
 import uuid
 from datetime import datetime, date
+import asyncio
 
 import numpy as np
 
 from detect_circles_nomask import DetectCircle
+# from utils.detect_circles import DetectCircle
+from utils.system_logger import log_request_stats
+
 
 from aws_config import AWSConfig
 
@@ -35,6 +39,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    response = await call_next(request)
+    # Run the logging function in a threadpool to prevent blocking the main async loop
+    asyncio.get_event_loop().run_in_executor(None, log_request_stats, request.method, str(request.url.path))
+    return response
 
 ###################################################################################
 # Mount the static directory for serving images

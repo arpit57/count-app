@@ -3,7 +3,7 @@ import time
 import cv2
 import cv2 as cv
 from datetime import datetime
-from data_preprocessing import Preprocess
+from utils.data_preprocessing import Preprocess
 import numpy as np
 import math
 # from sklearn.cluster import KMeans
@@ -114,14 +114,17 @@ class DetectCircle:
         try:
 
             
+            cv2.imshow("source ", source)
+            cv2.waitKey(2000)
             pre = Preprocess(source)
+
             source_seg, self.original, self.masks = pre.segment()
 
             if self.masks is not None:
                 self.output_path, _, _ = pre.checkFolder()
                 # self.denoise_img = pre.denoise()
                 self.upscale = pre.SuperResolution()
-
+                
                
 
                 filtered_image = cv2.ximgproc.anisotropicDiffusion(

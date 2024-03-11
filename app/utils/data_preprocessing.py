@@ -83,7 +83,8 @@ class Preprocess:
         Returns:
             A numpy array representing the image.
         """
-
+        # cv2.imshow("patgjjb ", self.path)
+        # cv2.waitKey(0)
         return self.path
 
     def segment(self):
@@ -118,9 +119,9 @@ class Preprocess:
             print("error is  :", error)
 
     def denoise(self):
-        im, og, _ = self.segment()
+        # im, og, _ = self.segment()
        
-        denosing = cv2.fastNlMeansDenoisingColored(im, None, 1, 1, 7, 21)
+        denosing = cv2.fastNlMeansDenoisingColored(self.loadImage(), None, 1, 1, 7, 21)
        
 
         return denosing
