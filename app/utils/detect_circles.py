@@ -122,6 +122,9 @@ class DetectCircle:
             # self.denoise_img = pre.denoise()
             self.upscale = pre.SuperResolution()
 
+
+            
+
             
 
             filtered_image = cv2.ximgproc.anisotropicDiffusion(
