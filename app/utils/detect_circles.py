@@ -112,124 +112,122 @@ class DetectCircle:
 
     def process_image(self, source):
         try:
-
-            
-            cv2.imshow("source ", source)
-            cv2.waitKey(2000)
+    
             pre = Preprocess(source)
 
-            source_seg, self.original, self.masks = pre.segment()
+            # source_seg, self.original, self.masks = pre.segment()
 
-            if self.masks is not None:
-                self.output_path, _, _ = pre.checkFolder()
-                # self.denoise_img = pre.denoise()
-                self.upscale = pre.SuperResolution()
+            # if self.masks is not None:
+            self.output_path, _, _ = pre.checkFolder()
+            # self.denoise_img = pre.denoise()
+            self.upscale = pre.SuperResolution()
+
+            
+
+            filtered_image = cv2.ximgproc.anisotropicDiffusion(
+                self.upscale, alpha=0.0001, K=50, niters=200
+            )
+
+            # )
+
+            #######   2ND #########
+            self.gray = cv2.cvtColor(filtered_image, cv2.COLOR_BGR2GRAY)
+
+            
+
+            clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(3, 3))
+            self.gray = clahe.apply(self.gray)
+
+            
+
+            self.original = cv.resize(
+                source, (self.upscale.shape[1], self.upscale.shape[0])
+            )
+
+            self.esrc = source.copy()
+            self.ed = cv.ximgproc.createEdgeDrawing()
+
+            self.EDParams = cv.ximgproc_EdgeDrawing_Params()
+            self.EDParams.MinPathLength = (
+                50  # try changing this value between 5 to 1000
+            )
+            self.EDParams.PFmode = False  # defaut value try to swich it to True
+
+            self.EDParams.MinLineLength = (
+                10  # try changing this value between 5 to 100
+            )
+            self.EDParams.NFAValidation = (
+                True  # defaut value try to swich it to False
+            )
+
+
+            self.ed.setParams(self.EDParams)
+            self.ed.detectEdges(self.gray)
+
+            self.ellipses = self.ed.detectEllipses()
+
+            self.count_circle = 0
+            if self.ellipses is not None:
+                size_threshold = 4.5
+
+                filtered_ellipses = filter_duplicate_ellipses(
+                    self.ellipses,
+                    size_threshold
+                    
+                    
+                )
                 
-               
 
-                filtered_image = cv2.ximgproc.anisotropicDiffusion(
-                    self.upscale, alpha=0.0001, K=50, niters=200
-                )
-
-                # )
-
-                #######   2ND #########
-                self.gray = cv2.cvtColor(filtered_image, cv2.COLOR_BGR2GRAY)
-
-                
-
-                clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(3, 3))
-                self.gray = clahe.apply(self.gray)
-
-               
-
-                self.original = cv.resize(
-                    source, (self.upscale.shape[1], self.upscale.shape[0])
-                )
-
-                self.esrc = source.copy()
-                self.ed = cv.ximgproc.createEdgeDrawing()
-
-                self.EDParams = cv.ximgproc_EdgeDrawing_Params()
-                self.EDParams.MinPathLength = (
-                    50  # try changing this value between 5 to 1000
-                )
-                self.EDParams.PFmode = False  # defaut value try to swich it to True
-
-                self.EDParams.MinLineLength = (
-                    10  # try changing this value between 5 to 100
-                )
-                self.EDParams.NFAValidation = (
-                    True  # defaut value try to swich it to False
-                )
-
-
-                self.ed.setParams(self.EDParams)
-                self.ed.detectEdges(self.gray)
-
-                self.ellipses = self.ed.detectEllipses()
-
-                self.count_circle = 0
-                if self.ellipses is not None:
-                    size_threshold = 4.5
-
-                    filtered_ellipses = filter_duplicate_ellipses(
-                        self.ellipses,
-                        size_threshold
-                        
-                        
+                for i in range(len(filtered_ellipses)):
+                    self.center = (
+                        int(filtered_ellipses[i][0][0]),
+                        int(filtered_ellipses[i][0][1]),
                     )
+
+                    self.axes = (
+                        int(filtered_ellipses[i][0][2])
+                        + int(filtered_ellipses[i][0][3]),
+                        int(filtered_ellipses[i][0][2])
+                        + int(filtered_ellipses[i][0][4]),
+                    )
+
                     
 
-                    for i in range(len(filtered_ellipses)):
-                        self.center = (
-                            int(filtered_ellipses[i][0][0]),
-                            int(filtered_ellipses[i][0][1]),
-                        )
+                    self.center1 = (
+                        int(filtered_ellipses[i][0][0]) - 10,
+                        int(filtered_ellipses[i][0][1]) + 5,
+                    )
 
-                        self.axes = (
-                            int(filtered_ellipses[i][0][2])
-                            + int(filtered_ellipses[i][0][3]),
-                            int(filtered_ellipses[i][0][2])
-                            + int(filtered_ellipses[i][0][4]),
-                        )
+                    self.angle = filtered_ellipses[i][0][5]
+                    self.color = (0, 0, 255)
 
-                       
+                    cv.ellipse(
+                        self.original,
+                        self.center,
+                        self.axes,
+                        self.angle,
+                        0,
+                        360,
+                        self.color,
+                        2,
+                        cv.LINE_AA,
+                    )
+                    cv.putText(
+                        self.original,
+                        f"{i+1}",
+                        self.center1,
+                        1,
+                        0.9,
+                        self.color,
+                        1,
+                        cv.LINE_AA,
+                    )
+                    self.count_circle += 1
 
-                        self.center1 = (
-                            int(filtered_ellipses[i][0][0]) - 10,
-                            int(filtered_ellipses[i][0][1]) + 5,
-                        )
-
-                        self.angle = filtered_ellipses[i][0][5]
-                        self.color = (0, 0, 255)
-
-                        cv.ellipse(
-                            self.original,
-                            self.center,
-                            self.axes,
-                            self.angle,
-                            0,
-                            360,
-                            self.color,
-                            2,
-                            cv.LINE_AA,
-                        )
-                        cv.putText(
-                            self.original,
-                            f"{i+1}",
-                            self.center1,
-                            1,
-                            0.9,
-                            self.color,
-                            1,
-                            cv.LINE_AA,
-                        )
-                        self.count_circle += 1
-
-                return self.original, self.count_circle, "finishing operations"
-            else:
-                return self.original, 0, "No Trucks found"
+            return self.original, self.count_circle, "finishing operations"
+                # else:
+                #     return self.original, 0, "No Trucks found"
 
         except Exception as error:
             print(error)
+            return self.original, 0, "No Trucks found"
