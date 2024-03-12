@@ -1,6 +1,6 @@
 from beanie import init_beanie
 from fastapi import Depends, FastAPI, UploadFile
-
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from db import User, db
 from schemas import UserCreate, UserRead, UserUpdate
@@ -21,7 +21,7 @@ from datetime import datetime, date
 import asyncio
 
 import numpy as np
-
+import os
 from detect_circles_nomask import DetectCircle
 # from utils.detect_circles import DetectCircle
 from utils.system_logger import log_request_stats
@@ -176,6 +176,20 @@ app.include_router(fastapi_users.get_oauth_router(google_oauth_client, auth_back
 async def authenticated_route(user: User = Depends(current_active_user)):
     return {"message": f"Hello {user.email}!"}
 
+@app.get("/logs")
+async def get_logs():
+    """
+    Endpoint to return the contents of logs.txt.
+    """
+    # Construct the path to logs.txt relative to this file
+    current_file_dir = os.path.dirname(os.path.abspath(__file__))
+    logs_path = os.path.join(current_file_dir, 'utils', 'logs.txt')
+    
+    # Check if the file exists
+    if not os.path.isfile(logs_path):
+        return {"error": "Log file not found."}
+    
+    return FileResponse(logs_path)
 
 @app.on_event("startup")
 async def on_startup():
