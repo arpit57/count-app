@@ -31,7 +31,7 @@ class Preprocess:
         # Get the directory of the current script
         # script_dir = os.path.dirname(os.path.abspath(__file__))
 
-        # # Construct the path to the model file
+        # Construct the path to the model file
         # model_path = os.path.join(script_dir, "best.pt")
 
         # # Initialize the YOLO model with the correct path
@@ -48,8 +48,8 @@ class Preprocess:
             numpy.ndarray: The upsampled image.
         """
 
-        # self._path = os.path.join(self.checkFolder()[2], "FSRCNN_x3.pb")
-        self._path = r"/home/arpit57/countApp/app/models/FSRCNN_x3.pb"
+        self._path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "FSRCNN_x3.pb")
+        # self._path = r"/home/arpit57/countApp/app/models/FSRCNN_x3.pb"
         self.sr.readModel(self._path)
         self.sr.setModel("fsrcnn", 3)
 
