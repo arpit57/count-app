@@ -147,9 +147,11 @@ class DetectCircle:
                 size_threshold = 4.5
                 filtered_ellipses = filter_duplicate_ellipses(self.ellipses, size_threshold)
 
-                for i in range(len(filtered_ellipses)):
-                    # Ellipse drawing logic here
+                for i, ellipse in enumerate(filtered_ellipses):
+                    center, axes, angle = (int(ellipse[0][0]), int(ellipse[0][1])), (int(ellipse[0][2]) + int(ellipse[0][3]), int(ellipse[0][2]) + int(ellipse[0][4])), ellipse[0][5]
+                    cv.ellipse(self.original, center, axes, angle, 0, 360, self.color, 2, cv.LINE_AA)
                     self.count_circle += 1
+                    
             return self.original, self.count_circle, "finishing operations"
         except Exception as error:
             print(error)
