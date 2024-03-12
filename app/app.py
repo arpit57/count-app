@@ -22,8 +22,8 @@ import asyncio
 
 import numpy as np
 import os
-from detect_circles_nomask import DetectCircle
-# from utils.detect_circles import DetectCircle
+# from detect_circles_nomask import DetectCircle
+from utils.detect_circles import DetectCircle
 from utils.system_logger import log_request_stats
 
 

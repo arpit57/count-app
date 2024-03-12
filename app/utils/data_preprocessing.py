@@ -1,7 +1,7 @@
 import os
 import cv2
-import numpy as np
-from ultralytics import YOLO
+# import numpy as np
+# from ultralytics import YOLO
 
 
 # from enlighten_inference import EnlightenOnnxModel
@@ -31,12 +31,12 @@ class Preprocess:
         # Get the directory of the current script
         # script_dir = os.path.dirname(os.path.abspath(__file__))
 
-        # Construct the path to the model file
+        # # Construct the path to the model file
         # model_path = os.path.join(script_dir, "best.pt")
 
-        # Initialize the YOLO model with the correct path
+        # # Initialize the YOLO model with the correct path
         # self.model = YOLO(model_path)
-        self.model = YOLO("/home/arpit57/countApp/app/models/best.pt")
+        # self.model = YOLO("/home/arpit57/countApp/app/models/best.pt")
 
     def SuperResolution(self):
         """
@@ -88,36 +88,36 @@ class Preprocess:
         # cv2.waitKey(0)
         return self.path
 
-    def segment(self):
-        """
-        Performs image segmentation on the loaded image using a pre-trained model.
+    # def segment(self):
+    #     """
+    #     Performs image segmentation on the loaded image using a pre-trained model.
 
-        Returns:
-        - new (numpy.ndarray): The segmented image.
-        - ori_img (numpy.ndarray): The original image.
-        """
-        try:
-            load_image = self.loadImage()
+    #     Returns:
+    #     - new (numpy.ndarray): The segmented image.
+    #     - ori_img (numpy.ndarray): The original image.
+    #     """
+    #     try:
+    #         load_image = self.loadImage()
 
-            self.results = self.model.predict(load_image, retina_masks=True)
+    #         self.results = self.model.predict(load_image, retina_masks=True)
 
-            if self.results[0].masks is None:
-                print("No Mask Found")
-                return load_image, load_image, None
-            for result in self.results:
-                self.mask = result.masks.cpu().numpy()
-                self.bbox = result.boxes[0].cpu().numpy()
-                self.masks = self.mask.data.astype(bool)
-                self.ori_img = result.orig_img
+    #         if self.results[0].masks is None:
+    #             print("No Mask Found")
+    #             return load_image, load_image, None
+    #         for result in self.results:
+    #             self.mask = result.masks.cpu().numpy()
+    #             self.bbox = result.boxes[0].cpu().numpy()
+    #             self.masks = self.mask.data.astype(bool)
+    #             self.ori_img = result.orig_img
 
-                for m in self.masks:
-                    self.new = np.zeros_like(self.ori_img, dtype=np.uint8)
+    #             for m in self.masks:
+    #                 self.new = np.zeros_like(self.ori_img, dtype=np.uint8)
 
-                    self.new[m] = self.ori_img[m]
+    #                 self.new[m] = self.ori_img[m]
 
-            return self.new, self.ori_img, self.results[0].masks
-        except Exception as error:
-            print("error is  :", error)
+    #         return self.new, self.ori_img, self.results[0].masks
+    #     except Exception as error:
+    #         print("error is  :", error)
 
     def denoise(self):
         # im, og, _ = self.segment()
