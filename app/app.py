@@ -17,13 +17,13 @@ from PIL import Image
 import cv2
 import base64
 import uuid
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import asyncio
 
 import numpy as np
 import os
-# from detect_circles_nomask import DetectCircle
-from utils.detect_circles import DetectCircle
+from detect_circles_nomask import DetectCircle
+# from utils.detect_circles import DetectCircle
 from utils.system_logger import log_request_stats
 
 
@@ -111,17 +111,23 @@ async def count(
     # s3_image_url = upload_to_s3(processed_image_path, bucket_name, object_name)
     s3_image_url = aws_config.upload_to_s3(processed_image_path, bucket_name, object_name)
 
+    # Current datetime in UTC
     current_utc_datetime = datetime.utcnow()
 
+    # Manually adjust for IST (UTC+5:30)
+    ist_offset = timedelta(hours=5, minutes=30)
+    current_ist_datetime = current_utc_datetime + ist_offset
+
     # Split the datetime into date and time components
-    utc_date = current_utc_datetime.date().isoformat()  # Format the date as a string in 'YYYY-MM-DD' format
-    utc_time = current_utc_datetime.time().isoformat(timespec='seconds')  # Format the time as a string in 'HH:MM:SS' format
+    ist_date = current_ist_datetime.date().isoformat()  # Format the date as a string in 'YYYY-MM-DD' format
+    ist_time = current_ist_datetime.time().isoformat(timespec='seconds')  # Format the time as a string in 'HH:MM:SS' format
+
 
     # Update the count_info dictionary with the new structure
     count_info = {
         "ID": str(uuid.uuid4()),
-        "Date": utc_date,
-        "Time": utc_time,
+        "Date": ist_date,
+        "Time": ist_time,
         "Count": count_text,  # Assuming count_text is a variable holding the count as a string
         "Processed_Image_URL": s3_image_url,  # Assuming processed_image_path is the path to the processed image
     }
