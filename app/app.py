@@ -129,7 +129,7 @@ async def count(
         "Date": ist_date,
         "Time": ist_time,
         "Count": count_text,  # Assuming count_text is a variable holding the count as a string
-        "Processed_Image_URL": s3_image_url,  # Assuming processed_image_path is the path to the processed image
+        "Processed_Image_URL": s3_image_url  # Assuming processed_image_path is the path to the processed image
     }
     user.counts.append(count_info)
 
@@ -142,8 +142,9 @@ async def count(
         }
     )
 
-    return count_text
-    # return {"type": str(ty)}
+    return {"Count": count_text, 
+        "Processed_Image_URL": s3_image_url
+}
 
 # Function to save the uploaded file
 def save_uploaded_file(file: UploadFile, destination: str):
