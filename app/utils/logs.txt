@@ -106,3 +106,11 @@
 {"timestamp": "2024-03-14T15:14:47.952109", "request_type": "POST", "endpoint": "/auth/jwt/login", "CPU_usage": "40.4%", "simultaneous_requests": 1}
 {"timestamp": "2024-03-14T15:14:54.755611", "request_type": "POST", "endpoint": "/auth/jwt/login", "CPU_usage": "39.6%", "simultaneous_requests": 1}
 {"timestamp": "2024-03-14T15:15:09.743520", "request_type": "POST", "endpoint": "/count", "CPU_usage": "38.9%", "simultaneous_requests": 1}
+{"timestamp": "2024-03-15T15:57:49.570655", "request_type": "GET", "endpoint": "/docs", "CPU_usage": "29.1%", "simultaneous_requests": 1}
+{"timestamp": "2024-03-15T15:57:49.665462", "request_type": "GET", "endpoint": "/openapi.json", "CPU_usage": "29.3%", "simultaneous_requests": 1}
+{"timestamp": "2024-03-15T15:58:01.124884", "request_type": "POST", "endpoint": "/auth/jwt/login", "CPU_usage": "23.2%", "simultaneous_requests": 1}
+{"timestamp": "2024-03-15T15:58:33.748135", "request_type": "POST", "endpoint": "/count", "CPU_usage": "18.5%", "simultaneous_requests": 1}
+{"timestamp": "2024-03-15T16:03:41.439244", "request_type": "POST", "endpoint": "/count", "CPU_usage": "44.4%", "simultaneous_requests": 1}
+{"timestamp": "2024-03-15T16:06:50.697089", "request_type": "POST", "endpoint": "/count", "CPU_usage": "33.2%", "simultaneous_requests": 1}
+{"timestamp": "2024-03-15T16:11:44.493894", "request_type": "POST", "endpoint": "/count", "CPU_usage": "94.8%", "simultaneous_requests": 1}
+{"timestamp": "2024-03-15T16:11:54.039676", "request_type": "POST", "endpoint": "/count", "CPU_usage": "68%", "simultaneous_requests": 1}
