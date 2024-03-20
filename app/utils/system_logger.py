@@ -3,7 +3,11 @@ import datetime
 import json
 import os
 from threading import Lock
-import traceback
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 LOGS_DIR = os.path.dirname(os.path.abspath(__file__))
 LOGS_FILE = os.path.join(LOGS_DIR, 'logs.txt')
@@ -13,30 +17,34 @@ lock = Lock()
 request_counter = 0
 
 def get_cpu_usage():
+    logger.info("Getting CPU usage")
     command = "ps -eo pcpu | awk 'NR>1 {sum += $1} END {print sum}'"
     result = subprocess.run(command, capture_output=True, shell=True, text=True)
     if result.returncode == 0:
-        return result.stdout.strip() + '%'
+        cpu_usage = result.stdout.strip() + '%'
+        logger.info(f"CPU usage: {cpu_usage}")
+        return cpu_usage
     else:
+        logger.error("Error obtaining CPU usage")
         return "Error obtaining CPU usage"
 
 def trim_logs():
-    """Keep only the latest 500 log entries."""
+    logger.info("Trimming logs to keep the size manageable")
     with lock:
         try:
             with open(LOGS_FILE, 'r+') as file:
                 lines = file.readlines()
                 if len(lines) > 500:
+                    logger.info("Log file size exceeds 500 lines, trimming")
                     file.seek(0)
                     file.truncate()
-                    # Keep only the last 500 entries
                     file.writelines(lines[-500:])
         except FileNotFoundError:
-            pass  # If the file doesn't exist yet, there's nothing to trim
+            logger.warning(f"Log file {LOGS_FILE} not found for trimming")
 
 def log_request_stats(request_type, endpoint):
+    global request_counter
     try:
-        global request_counter
         timestamp = datetime.datetime.now().isoformat()
         cpu_usage = get_cpu_usage()
 
@@ -44,27 +52,19 @@ def log_request_stats(request_type, endpoint):
             request_counter += 1
             current_request_count = request_counter
 
-        log_entry = {
-            'timestamp': timestamp,
-            'request_type': request_type,
-            'endpoint': endpoint,
-            'CPU_usage': cpu_usage,
-            'simultaneous_requests': current_request_count
-        }
+            log_entry = {
+                'timestamp': timestamp,
+                'request_type': request_type,
+                'endpoint': endpoint,
+                'CPU_usage': cpu_usage,
+                'simultaneous_requests': current_request_count
+            }
 
-        # Log the current request
-        with lock, open(LOGS_FILE, 'a') as log_file:
-            log_file.write(json.dumps(log_entry) + '\n')
+            logger.info(f"Logging request: {log_entry}")
+            with open(LOGS_FILE, 'a') as log_file:
+                log_file.write(json.dumps(log_entry) + '\n')
 
-        # Reset request counter (if desired)
-        # This line resets the counter after each logged request,
-        # if you want to maintain a continuous count, you should move this outside
-        with lock:
-            request_counter = 0
-        
-        # Trim the log file to keep only the latest 500 entries
         trim_logs()
 
     except Exception as e:
-        print(f"An error occurred: {e}")
-        traceback.print_exc()
+        logger.error(f"An error occurred while logging request stats: {e}", exc_info=True)

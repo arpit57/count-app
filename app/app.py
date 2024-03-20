@@ -18,8 +18,9 @@ from datetime import datetime, date, timedelta
 import asyncio
 import numpy as np
 import os
-from detect_circles_nomask import DetectCircle
+from detect_circles_nomask_segregation import DetectCircle
 from aws_config import AWSConfig
+from utils.system_logger import log_request_stats as log_system_stats
 
 app = FastAPI()
 
@@ -36,10 +37,14 @@ app.add_middleware(
 )
 
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def log_request_stats(request: Request, call_next):
     logger.info(f"Request {request.method} {request.url}")
     response = await call_next(request)
     logger.info(f"Response status code: {response.status_code}")
+
+    # Call the imported function to log request stats using system_logger's functionality
+    log_system_stats(request.method, str(request.url))
+    
     return response
 
 # Mount the static directory for serving images
