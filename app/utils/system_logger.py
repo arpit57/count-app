@@ -68,3 +68,6 @@ def log_request_stats(request_type, endpoint):
 
     except Exception as e:
         logger.error(f"An error occurred while logging request stats: {e}", exc_info=True)
+    finally:
+        with lock:
+            request_counter -= 1
