@@ -25,4 +25,4 @@ jobs:
           tags: arpit75/count-app:latest
 
       - name: Trigger EC2 update
-        run: "curl -X POST -d '{\"push\": {\"changes\": \"true\"}}' http://13.127.17.133:7000/hooks/update-docker-image"
+        run: "curl -X POST -d '{\"push\": {\"changes\": \"true\"}}' http://13.127.6.8:7000/hooks/update-docker-image"

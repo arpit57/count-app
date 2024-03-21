@@ -94,4 +94,3 @@ class DetectCircle:
         except Exception as error:
             logger.error(f"Error processing image: {error}")
             return self.original, 0, "Error processing image"
-

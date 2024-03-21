@@ -73,7 +73,6 @@ class DetectCircle:
         self.count_circle = 0
         try:
             self.original = source.copy()
-            image_width = self.original.shape[1]
             gray = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
             blurred = cv2.GaussianBlur(gray, (5, 5), 0)
             edges = cv2.Canny(blurred, 100, 200)
@@ -89,58 +88,41 @@ class DetectCircle:
                 size_threshold = 4.5
                 filtered_ellipses = filter_duplicate_ellipses(self.ellipses, size_threshold)
 
+                # Calculate diameters and find the range
                 diameters = [2 * radius_of_ellipse(e[0][2], e[0][3]) for e in filtered_ellipses]
                 if not diameters:
                     return self.original, 0, "No circles found"
 
-                avg_min, avg_max = get_average_of_extremes(diameters, 3)
+                avg_min, avg_max = get_average_of_extremes(diameters, 3)  # Averaging extremes using 3 data points
                 variation_percentage = (avg_max - avg_min) / avg_max * 100
 
-                segregation = variation_percentage > 30
-                if segregation:
-                    small_threshold = np.percentile(diameters, 33)
-                    large_threshold = np.percentile(diameters, 66)
-
-                label_x_position = image_width - 100  # Adjust based on text length and image size
-                label_positions = [(label_x_position, 30), (label_x_position, 60), (label_x_position, 90)]
-                label_colors = ['small', 'medium', 'large']
+                if variation_percentage > 30:
+                    small_threshold = np.percentile(diameters, 33)  # 33rd percentile
+                    large_threshold = np.percentile(diameters, 66)  # 66th percentile
+                else:
+                    small_threshold = avg_min
+                    large_threshold = avg_max
 
                 for ellipse in filtered_ellipses:
                     center, axes, angle = (int(ellipse[0][0]), int(ellipse[0][1])), (int(ellipse[0][2]) + int(ellipse[0][3]), int(ellipse[0][2]) + int(ellipse[0][4])), ellipse[0][5]
                     diameter = 2 * radius_of_ellipse(axes[0] / 2, axes[1] / 2)
 
-                    if segregation:
-                        if diameter < small_threshold:
-                            color = self.colors['small']
-                        elif diameter < large_threshold:
-                            color = self.colors['medium']
-                        else:
-                            color = self.colors['large']
+                    # Assign color based on size
+                    if diameter < small_threshold:
+                        color = self.colors['small']
+                    elif diameter < large_threshold:
+                        color = self.colors['medium']
                     else:
-                        color = (255, 255, 0)  # Yellow for no segregation
+                        color = self.colors['large']
 
                     cv2.ellipse(self.original, center, axes, angle, 0, 360, color, 2, cv2.LINE_AA)
                     self.count_circle += 1
 
-                # Annotate labels for segregation
-                if segregation:
-                    for pos, label_color in zip(label_positions, label_colors):
-                        cv2.putText(self.original, label_color, pos, self.font, 0.7, self.colors[label_color], 2, cv2.LINE_AA)
-                elif not self.count_circle:
-                    label_color = 'no segregation'
-                    label_position = (label_x_position, 30)
-                    cv2.putText(self.original, label_color, label_position, self.font, 0.7, (255, 255, 0), 2, cv2.LINE_AA)
-
-                if self.count_circle:
-                    logger.info(f"{self.count_circle} circles detected")
-                    return self.original, self.count_circle, "Finishing operations"
-                else:
-                    logger.info("No circles found")
-                    return self.original, 0, "No circles found"
-
+                logger.info(f"{self.count_circle} circles detected")
+                return self.original, self.count_circle, "Finishing operations"
             else:
-                logger.info("No ellipses detected")
-                return self.original, 0, "No ellipses detected"
+                logger.info("No circles found")
+                return self.original, 0, "No circles found"
 
         except Exception as error:
             logger.error(f"Error processing image: {error}")
