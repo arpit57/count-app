@@ -1,6 +1,6 @@
 import logging
 from beanie import init_beanie
-from fastapi import Depends, FastAPI, UploadFile, Request
+from fastapi import Depends, FastAPI, UploadFile, Request, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from db import User, db
@@ -85,11 +85,16 @@ def count_objects_from_base64(circles, base64_str):
 class CountRequest(BaseModel):
     base64_image: str
 
+async def get_current_admin_user(user: User = Depends(current_active_user)):
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Access forbidden: Requires admin role")
+    return user
+
 @app.post("/count")
 async def count(
     request: Request,
     count_request: CountRequest,
-    user: User = Depends(current_active_user)
+    user: User = Depends(get_current_admin_user)
 ):
     processed_img, count_text = count_objects_from_base64(circles, count_request.base64_image)
     processed_pil = Image.fromarray(processed_img)
