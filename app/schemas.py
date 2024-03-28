@@ -8,6 +8,7 @@ class UserRead(schemas.BaseUser[PydanticObjectId]):
 
 class UserCreate(schemas.BaseUserCreate):
     role: Optional[str] = None
+    admin_key: Optional[str] = None
 
 
 class UserUpdate(schemas.BaseUserUpdate):

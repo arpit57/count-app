@@ -5,15 +5,15 @@ from typing import Optional
 import logging
 
 from beanie import PydanticObjectId
-from fastapi import Depends, Request
+from fastapi import Depends, Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_users import BaseUserManager, FastAPIUsers
 from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
-from fastapi_users.db import BeanieUserDatabase, ObjectIDIDMixin
+from fastapi_users_db_beanie import BeanieUserDatabase, ObjectIDIDMixin
 
 from httpx_oauth.clients.google import GoogleOAuth2
-
-from db import User, get_user_db
+from schemas import UserCreate
+from db import User, get_user_db, Config
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -69,6 +69,31 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
 
     async def on_after_request_verify(self, user: User, token: str, request: Optional[Request] = None):
         logger.info(f"Verification requested for user {user.id}. Verification token: {token}")
+
+    async def create_user(self, user: UserCreate, safe: bool = False) -> User:
+        print("create_user method called")
+        # If the role is admin, validate the admin_key
+        if user.role == "admin":
+            # Retrieve the config document to get the stored admin_key
+            config = await Config.find_one({})
+            if config:
+                logger.info(f"Fetched admin key from Config: {config.admin_key}")
+            else:
+                logger.info("No Config found in the database.")
+            if not config or user.admin_key != config.admin_key:
+                # If no config found or admin_key does not match, raise an error
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Invalid admin key."
+                )
+
+        # Create the User instance with all the fields
+        db_user = User(**user.dict())
+        db_user.hashed_password = self.hash_password(user.password)
+
+        await db_user.create()  # Save the new user to the database
+        return db_user
+                
 
 async def get_user_manager(user_db: BeanieUserDatabase = Depends(get_user_db)):
     yield UserManager(user_db)

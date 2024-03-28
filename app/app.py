@@ -3,9 +3,10 @@ from beanie import init_beanie
 from fastapi import Depends, FastAPI, UploadFile, Request, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from db import User, db
+from fastapi_users_db_beanie import BeanieUserDatabase
+from db import User, db, get_user_db
 from schemas import UserCreate, UserRead, UserUpdate
-from users import auth_backend, current_active_user, fastapi_users, google_oauth_client
+from users import UserManager, auth_backend, current_active_user, fastapi_users, google_oauth_client
 from typing import List, Dict
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -142,6 +143,9 @@ app.include_router(fastapi_users.get_reset_password_router(), prefix="/auth", ta
 app.include_router(fastapi_users.get_verify_router(UserRead), prefix="/auth", tags=["auth"])
 app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix="/users", tags=["users"])
 app.include_router(fastapi_users.get_oauth_router(google_oauth_client, auth_backend, "SECRET", associate_by_email=True, is_verified_by_default=True), prefix="/auth/google", tags=["auth"])
+
+async def get_user_manager(user_db: BeanieUserDatabase = Depends(get_user_db)):
+    yield UserManager(user_db)
 
 @app.get("/authenticated-route")
 async def authenticated_route(user: User = Depends(current_active_user)):

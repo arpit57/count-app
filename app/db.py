@@ -2,7 +2,7 @@ from typing import List, Dict, Any
 import logging
 import motor.motor_asyncio
 from beanie import Document
-from fastapi_users.db import BaseOAuthAccount, BeanieBaseUser, BeanieUserDatabase
+from fastapi_users_db_beanie import BaseOAuthAccount, BeanieBaseUser, BeanieUserDatabase
 from pydantic import Field
 
 # Logger configuration
@@ -23,6 +23,9 @@ class User(BeanieBaseUser, Document):
     oauth_accounts: List[OAuthAccount] = Field(default_factory=list)
     role: str = Field(default="user")
 
+class Config(Document):
+    admin_key: str = Field(...)
+
 async def get_user_db():
     logger.info("Retrieving user database")
     yield BeanieUserDatabase(User, OAuthAccount)
@@ -39,3 +42,10 @@ try:
     logger.info("Connected to MongoDB")
 except Exception as e:
     logger.error(f"Error connecting to MongoDB: {e}")
+
+async def test_config_retrieval():
+    config = await Config.find_one({})
+    if config:
+        print("Retrieved Config:", config.admin_key)
+    else:
+        print("No Config found.")
