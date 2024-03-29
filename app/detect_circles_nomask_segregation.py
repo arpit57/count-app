@@ -119,8 +119,22 @@ class DetectCircle:
                     else:
                         color = (255, 255, 0)  # Yellow for no segregation
 
-                    cv2.ellipse(self.original, center, axes, angle, 0, 360, color, 2, cv2.LINE_AA)
+                    cv2.ellipse(self.original, center, axes, angle, 0, 360, color, 1, cv2.LINE_AA)
                     self.count_circle += 1
+
+                    # Prepare the text to be displayed
+                    count_text = str(self.count_circle)
+
+                    # Calculate text size to position it roughly in the center of the ellipse
+                    (text_width, text_height), _ = cv2.getTextSize(count_text, self.font, 1, 2)
+
+                    # Adjust the text position to be at the center of the ellipse
+                    text_x = center[0] - text_width // 2
+                    text_y = center[1] + text_height // 2
+
+                    # Put the text on the image
+                    cv2.putText(self.original, count_text, (text_x, text_y), self.font, 1, (255, 255, 255), 1, cv2.LINE_AA)
+                    #commented out for debugging
 
                 # Annotate labels for segregation
                 if segregation:
