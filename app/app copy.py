@@ -55,33 +55,18 @@ templates = Jinja2Templates(directory="../templates")
 circles = DetectCircle()
 aws_config = AWSConfig()
 
-async def save_base64_image(base64_str):
+async def save_base64_image(base64_str, image_path):
     try:
         image_data = base64.b64decode(base64_str)
     except base64.binascii.Error:
         logger.error("Invalid base64 format")
         raise ValueError("Invalid base64 format. Please submit a valid base64-encoded image.")
     
-    # Define the local path for saving the image
-    original_image_path = f"../static/original_{uuid.uuid4()}.png"
-    
-    # Write the image data to a local file
-    with open(original_image_path, 'wb') as f:
+    with open(image_path, 'wb') as f:
         f.write(image_data)
-
-    bucket_name = 'alvision-count'
-    object_name = f"count/original/original_{uuid.uuid4()}.png"
     
-    # Use the existing upload_to_s3 method
-    aws_config = AWSConfig()
-    original_image_url = aws_config.upload_to_s3(original_image_path, bucket_name, object_name)
-
-    logger.info(f"Original image saved to {original_image_url}")
-
-    # Optionally, remove the local file if not needed
-    os.remove(original_image_path)
-
-    return original_image_url
+    logger.info(f"Image saved to {image_path}")
+    return image_path
 
 def count_objects_from_base64(circles, base64_str):
     image_data = base64.b64decode(base64_str)
@@ -110,17 +95,14 @@ async def count(
     count_request: CountRequest,
     user: User = Depends(get_current_admin_user)
 ):
-    
-    original_image_url = await save_base64_image(count_request.base64_image)
-
     processed_img, count_text = count_objects_from_base64(circles, count_request.base64_image)
     processed_pil = Image.fromarray(processed_img)
     processed_image_path = f"../static/processed_{uuid.uuid4()}.png"
     processed_pil.save(processed_image_path)
 
-    bucket_name = 'alvision-count'  # Replace with your bucket name
-    object_name = f"count/processed/processed_{uuid.uuid4()}.png"
-    processed_image_url = aws_config.upload_to_s3(processed_image_path, bucket_name, object_name)
+    bucket_name = 'pi-processed-images'  # Replace with your bucket name
+    object_name = f"processed_{uuid.uuid4()}.png"
+    s3_image_url = aws_config.upload_to_s3(processed_image_path, bucket_name, object_name)
 
     current_utc_datetime = datetime.utcnow()
     ist_offset = timedelta(hours=5, minutes=30)
@@ -133,17 +115,14 @@ async def count(
         "Date": ist_date,
         "Time": ist_time,
         "Count": count_text,
-        "Processed_Image_URL": processed_image_url,
-        "Original_Image_URL": original_image_url
+        "Processed_Image_URL": s3_image_url
     }
     user.counts.append(count_info)
 
     await user.update({"$set": {"counts": user.counts}})
     logger.info("Count and processed image are saved")
-
-    os.remove(processed_image_path)
     
-    return {"Count": count_text, "Processed_Image_URL": processed_image_url}
+    return {"Count": count_text, "Processed_Image_URL": s3_image_url}
 
 @app.get("/user-counts", response_model=List[Dict])
 async def get_user_counts(user: User = Depends(current_active_user)):
