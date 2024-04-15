@@ -1,6 +1,8 @@
 import os
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 from typing import Optional
 import logging
 from beanie import PydanticObjectId
@@ -62,19 +64,28 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
         logger.info(f"Verification requested for user {user.id}. Verification token: {token}")
 
 # Add the function to send the PDF download email
-async def send_pdf_download_email(email: str):
+async def send_pdf_download_email(email: str, pdf_file_path: str):
     smtp_server = "smtp.gmail.com"
     smtp_port = 587
     smtp_username = "helpdesk@alluvium.in"
     smtp_password = "ooxi zbye qrvn smpj"
     subject = "PDF Downloaded"
-    body = "The PDF was downloaded successfully."
+    body = "Please find the downloaded PDF attached to this email."
     sender_email = "helpdesk@alluvium.in"
     recipient_email = email
-    msg = MIMEText(body)
+
+    msg = MIMEMultipart()
     msg["Subject"] = subject
     msg["From"] = sender_email
     msg["To"] = recipient_email
+
+    msg.attach(MIMEText(body))
+
+    with open(pdf_file_path, "rb") as attachment:
+        part = MIMEApplication(attachment.read(), _subtype="pdf")
+        part.add_header("Content-Disposition", "attachment", filename=os.path.basename(pdf_file_path))
+        msg.attach(part)
+
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
@@ -84,6 +95,7 @@ async def send_pdf_download_email(email: str):
     except Exception as e:
         logger.error(f"Failed to send PDF download email to {recipient_email}: {e}")
         raise
+
 
 async def get_user_manager(user_db: BeanieUserDatabase = Depends(get_user_db)):
     yield UserManager(user_db)
@@ -108,8 +120,10 @@ auth_router = APIRouter()
 @auth_router.get("/pdf-downloaded", tags=["auth"])
 async def pdf_downloaded(user: User = Depends(current_active_user)):
     try:
-        await send_pdf_download_email(user.email)
-        return JSONResponse(content={"message": "PDF downloaded. Email sent."})
+        pdf_file_path = "utils/resumeArpit.pdf"  # Replace with the actual path to your PDF file
+        await send_pdf_download_email(user.email, pdf_file_path)
+        return JSONResponse(content={"message": "PDF downloaded. Email sent with attachment."})
     except Exception as e:
         logger.error(f"Failed to send PDF download email: {e}")
-        return JSONResponse(content={"error": "Failed to send email."}, status_code=500)
+        return JSONResponse(content={"error": "Failed to send email with attachment."}, status_code=500)
+

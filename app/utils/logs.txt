@@ -388,3 +388,7 @@
 {"timestamp": "2024-04-15T15:04:29.373914", "request_type": "POST", "endpoint": "http://localhost:8000/count", "CPU_usage": "20.1%", "simultaneous_requests": 1}
 {"timestamp": "2024-04-15T15:04:51.443320", "request_type": "GET", "endpoint": "http://localhost:8000/no-of-requests?date=2024-04-15", "CPU_usage": "20%", "simultaneous_requests": 1}
 {"timestamp": "2024-04-15T15:13:32.082592", "request_type": "GET", "endpoint": "http://localhost:8000/user-counts/2024-04-15", "CPU_usage": "19%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-15T15:39:54.447350", "request_type": "GET", "endpoint": "http://localhost:8000/docs", "CPU_usage": "51.9%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-15T15:39:54.668291", "request_type": "GET", "endpoint": "http://localhost:8000/openapi.json", "CPU_usage": "52.2%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-15T15:40:54.741041", "request_type": "POST", "endpoint": "http://localhost:8000/auth/jwt/login", "CPU_usage": "22.3%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-15T15:41:11.747046", "request_type": "GET", "endpoint": "http://localhost:8000/auth/pdf-downloaded", "CPU_usage": "21.2%", "simultaneous_requests": 1}
