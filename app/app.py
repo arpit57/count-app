@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from db import User, db
 from schemas import UserCreate, UserRead, UserUpdate
-from users import auth_backend, current_active_user, fastapi_users, google_oauth_client
+from users import auth_backend, current_active_user, fastapi_users, google_oauth_client, auth_router
 from typing import List, Dict
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -138,7 +138,15 @@ async def count(
     }
     user.counts.append(count_info)
 
-    await user.update({"$set": {"counts": user.counts}})
+    # Update the count_requests field for the user
+    current_date = current_ist_datetime.date()
+    count_request_entry = next((entry for entry in user.count_requests if entry["date"] == current_date.isoformat()), None)
+    if count_request_entry:
+        count_request_entry["count"] += 1
+    else:
+        user.count_requests.append({"date": current_date.isoformat(), "count": 1})
+
+    await user.update({"$set": {"counts": user.counts, "count_requests": user.count_requests}})
     logger.info("Count and processed image are saved")
 
     os.remove(processed_image_path)
@@ -156,6 +164,13 @@ async def get_user_counts_by_date(date: date, user: User = Depends(current_activ
     logger.info(f"Retrieving user counts for date: {date}")
     return filtered_counts
 
+@app.get("/no-of-requests")
+async def get_no_of_requests(date: date):
+    users = await User.find().to_list()
+    total_count = sum(entry["count"] for user in users for entry in user.count_requests if entry.get("date") == date.isoformat())
+    return {"date": date.isoformat(), "total_count": total_count}
+
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"])
 app.include_router(fastapi_users.get_register_router(UserRead, UserCreate), prefix="/auth", tags=["auth"])
 app.include_router(fastapi_users.get_reset_password_router(), prefix="/auth", tags=["auth"])
