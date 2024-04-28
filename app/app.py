@@ -17,7 +17,7 @@ import uuid
 from datetime import datetime, date, timedelta
 import numpy as np
 import os
-from detect_circles_nomask_segregation import DetectCircle
+from detect_circles import DetectCircle
 from aws_config import AWSConfig
 from utils.system_logger import log_request_stats as log_system_stats
 

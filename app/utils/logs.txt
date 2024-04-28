@@ -407,3 +407,14 @@
 {"timestamp": "2024-04-15T18:25:11.111119", "request_type": "GET", "endpoint": "http://localhost:8000/auth/pdf-downloaded?s3_url=s3%3A%2F%2Falvision-count%2Fcount%2Ftest%2FresumeArpit.pdf", "CPU_usage": "21%", "simultaneous_requests": 1}
 {"timestamp": "2024-04-15T18:28:11.036311", "request_type": "GET", "endpoint": "http://localhost:8000/auth/pdf-downloaded?s3_url=s3%3A%2F%2Falvision-count%2Fcount%2Ftest%2FPurple%20and%20White%20Clean%20and%20Professional%20Resume%20%281%29.pdf", "CPU_usage": "18.3%", "simultaneous_requests": 1}
 {"timestamp": "2024-04-15T18:50:52.175283", "request_type": "GET", "endpoint": "http://localhost:8000/no-of-requests?date=2024-04-15", "CPU_usage": "17.2%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:40:35.541872", "request_type": "GET", "endpoint": "http://localhost:8000/docs", "CPU_usage": "158.1%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:40:36.127575", "request_type": "GET", "endpoint": "http://localhost:8000/openapi.json", "CPU_usage": "160.4%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:40:48.364318", "request_type": "POST", "endpoint": "http://localhost:8000/auth/jwt/login", "CPU_usage": "125%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:41:06.557716", "request_type": "POST", "endpoint": "http://localhost:8000/count", "CPU_usage": "104.1%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:43:18.636905", "request_type": "POST", "endpoint": "http://localhost:8000/count", "CPU_usage": "91.2%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:43:41.932162", "request_type": "POST", "endpoint": "http://localhost:8000/count", "CPU_usage": "107.6%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:43:46.131138", "request_type": "GET", "endpoint": "http://localhost:8000/docs", "CPU_usage": "96.3%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:43:46.700603", "request_type": "GET", "endpoint": "http://localhost:8000/openapi.json", "CPU_usage": "95%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:44:01.598773", "request_type": "POST", "endpoint": "http://localhost:8000/auth/jwt/login", "CPU_usage": "82.7%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:44:23.290560", "request_type": "POST", "endpoint": "http://localhost:8000/count", "CPU_usage": "73.4%", "simultaneous_requests": 1}
+{"timestamp": "2024-04-28T14:47:16.320720", "request_type": "POST", "endpoint": "http://localhost:8000/count", "CPU_usage": "85.2%", "simultaneous_requests": 1}
