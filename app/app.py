@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from db import User, db
 from schemas import UserCreate, UserRead, UserUpdate
-from users import auth_backend, current_active_user, fastapi_users, google_oauth_client, auth_router
+from users import auth_backend, current_active_user, fastapi_users,  auth_router
 from typing import List, Dict
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -155,12 +155,13 @@ async def count(
 
 @app.get("/user-counts", response_model=List[Dict])
 async def get_user_counts(user: User = Depends(current_active_user)):
+    filtered_counts = [count for count in user.counts if 'ID' in count]
     logger.info("Retrieving user counts")
-    return user.counts
+    return filtered_counts
 
 @app.get("/user-counts/{date}", response_model=List[Dict])
 async def get_user_counts_by_date(date: date, user: User = Depends(current_active_user)):
-    filtered_counts = [count for count in user.counts if count["Date"] == date.isoformat()]
+    filtered_counts = [count for count in user.counts if count["Date"] == date.isoformat() and 'ID' in count]
     logger.info(f"Retrieving user counts for date: {date}")
     return filtered_counts
 
@@ -176,7 +177,6 @@ app.include_router(fastapi_users.get_register_router(UserRead, UserCreate), pref
 app.include_router(fastapi_users.get_reset_password_router(), prefix="/auth", tags=["auth"])
 app.include_router(fastapi_users.get_verify_router(UserRead), prefix="/auth", tags=["auth"])
 app.include_router(fastapi_users.get_users_router(UserRead, UserUpdate), prefix="/users", tags=["users"])
-app.include_router(fastapi_users.get_oauth_router(google_oauth_client, auth_backend, "SECRET", associate_by_email=True, is_verified_by_default=True), prefix="/auth/google", tags=["auth"])
 
 @app.get("/authenticated-route")
 async def authenticated_route(user: User = Depends(current_active_user)):
