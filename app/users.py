@@ -15,6 +15,8 @@ from httpx_oauth.clients.google import GoogleOAuth2
 from db import User, get_user_db
 import tempfile
 import boto3
+from datetime import timedelta
+from utils.token_handler import generate_jwt, decode_jwt
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,8 +32,51 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
 
+    def generate_verification_token(self, user: User):
+        # Generates a JWT token for email verification
+        data = {"user_id": str(user.id)}
+        return generate_jwt(data, self.verification_token_secret, timedelta(hours=48))
+
+    async def verify_token(self, token: str):
+        # Verifies the token and if valid, activates the user
+        claims = decode_jwt(token, self.verification_token_secret)
+        if claims and 'user_id' in claims:
+            user_id = claims['user_id']
+            user = await self.get(user_id)
+            if user and not user.is_verified:
+                # Use Beanie's document update methods
+                await user.set({"is_verified": True})
+                return True
+        return False
+
     async def on_after_register(self, user: User, request: Optional[Request] = None):
-        logger.info(f"User {user.id} has registered.")
+        token = self.generate_verification_token(user)
+        
+        # Send email verification
+        await self.send_verification_email(user.email, token)
+        logger.info(f"Verification email sent to {user.email}.")
+
+    async def send_verification_email(self, email: str, token: str):
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587
+        smtp_username = "helpdesk@alluvium.in"
+        smtp_password = "ooxi zbye qrvn smpj"
+        subject = "Email Verification"
+        verification_url = f"http://127.0.0.1:8000/auth/verify?token={token}"
+        body = f"Please click the following link to verify your email: <a href='{verification_url}'>{verification_url}</a>"
+        sender_email = "helpdesk@alluvium.in"
+        recipient_email = email
+        
+        msg = MIMEText(body, 'html')
+        msg["Subject"] = subject
+        msg["From"] = sender_email
+        msg["To"] = recipient_email
+        
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_username, smtp_password)
+            server.sendmail(sender_email, [recipient_email], msg.as_string())
+        logger.info(f"Verification email sent to {recipient_email}.")
 
     async def on_after_forgot_password(self, user: User, token: str, request: Optional[Request] = None):
         # Send email to the user with the reset password token
@@ -140,6 +185,15 @@ current_active_user = fastapi_users.current_user(active=True)
 
 # Create a new router for the auth routes
 auth_router = APIRouter()
+
+@auth_router.get("/verify")
+async def verify(token: str, user_manager: UserManager = Depends(get_user_manager)):
+    # Logic to verify the token and activate the user
+    result = await user_manager.verify_token(token)
+    if result:
+        return JSONResponse(content={"message": "Email verified successfully."})
+    else:
+        return JSONResponse(content={"error": "Invalid or expired token."}, status_code=400)
 
 @auth_router.get("/pdf-downloaded", tags=["auth"])
 async def pdf_downloaded(
