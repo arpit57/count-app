@@ -153,6 +153,35 @@ async def count(
     
     return {"Count": count_text, "Processed_Image_URL": processed_image_url}
 
+@app.put("/manual-count")
+async def update_count(
+    increment: int,
+    user: User = Depends(current_active_user)
+):
+    if not user.counts:
+        raise HTTPException(status_code=404, detail="No records found for this user.")
+
+    # Retrieve the last count record
+    last_record = user.counts[-1]
+
+    # Extract the numeric part and the suffix from the last count
+    parts = last_record["Count"].split(" ")
+    if len(parts) < 2 or not parts[0].isdigit():
+        raise HTTPException(status_code=400, detail="Current count format is invalid.")
+
+    # Calculate the new count
+    new_count = int(parts[0]) + increment
+    updated_count = f"{new_count} {parts[1]}"  # Assuming the suffix is always the same and at index 1
+
+    # Update the count in the last record
+    last_record["Count"] = updated_count
+
+    # Save the updated user document
+    await user.update({"$set": {"counts": user.counts}})
+    logger.info("Last count record updated")
+
+    return {"msg": "Count updated", "Last_Record": last_record}
+
 @app.get("/user-counts", response_model=List[Dict])
 async def get_user_counts(user: User = Depends(current_active_user)):
     filtered_counts = [count for count in user.counts if 'ID' in count]

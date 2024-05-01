@@ -473,3 +473,12 @@
 {"timestamp": "2024-04-30T16:23:08.881136", "request_type": "GET", "endpoint": "http://localhost:8000/openapi.json", "CPU_usage": "25.1%", "simultaneous_requests": 1}
 {"timestamp": "2024-04-30T16:24:10.926156", "request_type": "POST", "endpoint": "http://localhost:8000/auth/register", "CPU_usage": "24.4%", "simultaneous_requests": 1}
 {"timestamp": "2024-04-30T16:24:53.006473", "request_type": "GET", "endpoint": "http://127.0.0.1:8000/auth/verify?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjYzMGNkY2U0MDRkMGFlYTc2NDcxZTE2IiwiZXhwIjoxNzE0NjQ3MjQ3fQ.i_bAG7eyfvdDJisiSN95FcRygH7fTqgV14W881vUhCA", "CPU_usage": "23.9%", "simultaneous_requests": 1}
+{"timestamp": "2024-05-01T12:37:41.491938", "request_type": "GET", "endpoint": "http://localhost:8000/", "CPU_usage": "118.8%", "simultaneous_requests": 1}
+{"timestamp": "2024-05-01T12:37:45.758938", "request_type": "GET", "endpoint": "http://localhost:8000/docs", "CPU_usage": "71.8%", "simultaneous_requests": 1}
+{"timestamp": "2024-05-01T12:37:45.967896", "request_type": "GET", "endpoint": "http://localhost:8000/openapi.json", "CPU_usage": "66.9%", "simultaneous_requests": 1}
+{"timestamp": "2024-05-01T12:39:05.150841", "request_type": "POST", "endpoint": "http://localhost:8000/auth/jwt/login", "CPU_usage": "30.1%", "simultaneous_requests": 1}
+{"timestamp": "2024-05-01T12:39:15.488343", "request_type": "PUT", "endpoint": "http://localhost:8000/manual-count?increment=3", "CPU_usage": "29.3%", "simultaneous_requests": 1}
+{"timestamp": "2024-05-01T12:46:08.060831", "request_type": "GET", "endpoint": "http://localhost:8000/docs", "CPU_usage": "24.9%", "simultaneous_requests": 1}
+{"timestamp": "2024-05-01T12:46:08.289742", "request_type": "GET", "endpoint": "http://localhost:8000/openapi.json", "CPU_usage": "25%", "simultaneous_requests": 1}
+{"timestamp": "2024-05-01T12:46:26.336988", "request_type": "POST", "endpoint": "http://localhost:8000/auth/jwt/login", "CPU_usage": "24.8%", "simultaneous_requests": 1}
+{"timestamp": "2024-05-01T12:46:31.525756", "request_type": "PUT", "endpoint": "http://localhost:8000/manual-count?increment=3", "CPU_usage": "24.7%", "simultaneous_requests": 1}
