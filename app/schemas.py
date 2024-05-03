@@ -1,3 +1,5 @@
+#app/schemas.py
+
 from beanie import PydanticObjectId
 from fastapi_users import schemas
 from typing import Optional
