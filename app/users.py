@@ -82,7 +82,7 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
         smtp_username = "helpdesk@alluvium.in"
         smtp_password = "ooxi zbye qrvn smpj"
         subject = "Reset Password Request"
-        reset_password_url = f"http://127.0.0.1:8000/auth/reset-password?token={token}"
+        reset_password_url = f"http://localhost:4000/?token={token}"
         body = f"Click the following link to reset your password: <a href='{reset_password_url}'>{reset_password_url}</a>"
         sender_email = "helpdesk@alluvium.in"
         recipient_email = email

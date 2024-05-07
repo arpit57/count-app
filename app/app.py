@@ -158,6 +158,7 @@ async def count(
 @app.put("/manual-count")
 async def update_count(
     increment: int,
+    processed_image_url: str,
     user: User = Depends(current_active_user)
 ):
     if not user.counts:
@@ -177,12 +178,13 @@ async def update_count(
 
     # Update the count in the last record
     last_record["Count"] = updated_count
+    last_record["Processed_Image_URL"] = processed_image_url
 
     # Save the updated user document
     await user.update({"$set": {"counts": user.counts}})
-    logger.info("Last count record updated")
+    logger.info("Last record updated")
 
-    return {"msg": "Count updated", "Last_Record": last_record}
+    return {"msg": "Count and processed image URL updated", "Last_Record": last_record}
 
 @app.get("/user-counts", response_model=List[Dict])
 async def get_user_counts(user: User = Depends(current_active_user)):
