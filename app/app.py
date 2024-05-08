@@ -155,7 +155,7 @@ async def count(
     
     return {"Count": count_text, "Processed_Image_URL": processed_image_url}
 
-@app.put("/manual-count")
+@app.patch("/manual-count")
 async def update_count(
     increment: int,
     processed_image_url: str,
