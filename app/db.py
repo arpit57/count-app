@@ -25,7 +25,8 @@ class User(BeanieBaseUser, Document):
     oauth_accounts: List[OAuthAccount] = Field(default_factory=list)
     role: str = Field(default="user")
     count_requests: List[Dict[str, Any]] = Field(default_factory=list)
-
+    associated_users: List[str] = Field(default_factory=list)
+    
 async def get_user_db():
     logger.info("Retrieving user database")
     yield BeanieUserDatabase(User, OAuthAccount)

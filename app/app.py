@@ -2,7 +2,7 @@
 
 import logging
 from beanie import init_beanie
-from fastapi import Depends, FastAPI, Request, HTTPException
+from fastapi import Depends, FastAPI, Request, HTTPException, Body
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from db import User, db
@@ -110,7 +110,7 @@ async def get_current_admin_user(user: User = Depends(current_active_user)):
 async def count(
     request: Request,
     count_request: CountRequest,
-    user: User = Depends(get_current_admin_user)
+    admin: User = Depends(get_current_admin_user)
 ):
     
     original_image_url = await save_base64_image(count_request.base64_image)
@@ -138,22 +138,51 @@ async def count(
         "Processed_Image_URL": processed_image_url,
         "Original_Image_URL": original_image_url
     }
-    user.counts.append(count_info)
+    
+    # List to update counts for both admin and associated users
+    users_to_update = [admin] + [await User.find_one(User.email == email) for email in admin.associated_users]
 
-    # Update the count_requests field for the user
+    # Update the count_requests field for the admin only
     current_date = current_ist_datetime.date()
-    count_request_entry = next((entry for entry in user.count_requests if entry["date"] == current_date.isoformat()), None)
+    count_request_entry = next((entry for entry in admin.count_requests if entry["date"] == current_date.isoformat()), None)
     if count_request_entry:
         count_request_entry["count"] += 1
     else:
-        user.count_requests.append({"date": current_date.isoformat(), "count": 1})
+        admin.count_requests.append({"date": current_date.isoformat(), "count": 1})
+    await admin.save()
 
-    await user.update({"$set": {"counts": user.counts, "count_requests": user.count_requests}})
-    logger.info("Count and processed image are saved")
+    # Update counts for all users including admin
+    for user in users_to_update:
+        if user:
+            user.counts.append(count_info)
+            await user.save()
+            logger.info(f"Count and processed image are saved for user {user.email}")
+
 
     os.remove(processed_image_path)
     
     return {"Count": count_text, "Processed_Image_URL": processed_image_url}
+
+@app.post("/associate-user")
+async def associate_user(
+    user_email: str = Body(..., embed=True),
+    admin: User = Depends(get_current_admin_user)
+):    
+    # Retrieve the user to be associated based on provided email
+    target_user = await User.find_one(User.email == user_email)
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User to be associated not found")
+
+    # Check if the user email is already in the admin's associated_users list
+    if user_email in admin.associated_users:
+        raise HTTPException(status_code=400, detail="User already associated with this admin")
+
+    # Add the user's email to the admin's associated_users list
+    admin.associated_users.append(user_email)
+    await admin.save()
+
+    return {"message": "User successfully associated"}
+
 
 @app.patch("/manual-count")
 async def update_count(
