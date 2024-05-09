@@ -188,13 +188,14 @@ async def update_count(
 
 @app.get("/user-counts", response_model=List[Dict])
 async def get_user_counts(user: User = Depends(current_active_user)):
-    filtered_counts = [count for count in user.counts if 'ID' in count]
+    # filtered_counts = [count for count in user.counts if 'ID' in count]
     logger.info("Retrieving user counts")
-    return filtered_counts
+    return user.counts
 
 @app.get("/user-counts/{date}", response_model=List[Dict])
 async def get_user_counts_by_date(date: date, user: User = Depends(current_active_user)):
-    filtered_counts = [count for count in user.counts if count["Date"] == date.isoformat() and 'ID' in count]
+    # filtered_counts = [count for count in user.counts if count["Date"] == date.isoformat() and 'ID' in count]
+    filtered_counts = [count for count in user.counts if count["Date"] == date.isoformat()]
     logger.info(f"Retrieving user counts for date: {date}")
     return filtered_counts
 
