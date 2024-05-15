@@ -20,6 +20,7 @@ from datetime import datetime, date, timedelta
 import numpy as np
 import os
 from detect_circles import DetectCircle
+from detect_circles_yolo import count_objects_with_yolo
 from aws_config import AWSConfig
 from utils.system_logger import log_request_stats as log_system_stats
 
@@ -116,6 +117,67 @@ async def count(
     original_image_url = await save_base64_image(count_request.base64_image)
 
     processed_img, count_text = count_objects_from_base64(circles, count_request.base64_image)
+    # print(type(processed_img), type(count_text), count_text)    
+    processed_img = cv2.cvtColor(processed_img, cv2.COLOR_BGR2RGB)
+    processed_pil = Image.fromarray(processed_img)
+    processed_image_path = f"../static/processed_{uuid.uuid4()}.png"
+    processed_pil.save(processed_image_path)
+
+    bucket_name = 'alvision-count'  # Replace with your bucket name
+    object_name = f"count/processed/processed_{uuid.uuid4()}.png"
+    processed_image_url = aws_config.upload_to_s3(processed_image_path, bucket_name, object_name)
+
+    current_utc_datetime = datetime.utcnow()
+    ist_offset = timedelta(hours=5, minutes=30)
+    current_ist_datetime = current_utc_datetime + ist_offset
+    ist_date = current_ist_datetime.date().isoformat()
+    ist_time = current_ist_datetime.time().isoformat(timespec='seconds')
+
+    count_info = {
+        "ID": str(uuid.uuid4()),
+        "Date": ist_date,
+        "Time": ist_time,
+        "Count": count_text,
+        "Processed_Image_URL": processed_image_url,
+        "Original_Image_URL": original_image_url
+    }
+    
+    # List to update counts for both admin and associated users
+    users_to_update = [admin] + [await User.find_one(User.email == email) for email in admin.associated_users]
+
+    # Update the count_requests field for the admin only
+    current_date = current_ist_datetime.date()
+    count_request_entry = next((entry for entry in admin.count_requests if entry["date"] == current_date.isoformat()), None)
+    if count_request_entry:
+        count_request_entry["count"] += 1
+    else:
+        admin.count_requests.append({"date": current_date.isoformat(), "count": 1})
+    await admin.save()
+
+    # Update counts for all users including admin
+    for user in users_to_update:
+        if user:
+            user.counts.append(count_info)
+            await user.save()
+            logger.info(f"Count and processed image are saved for user {user.email}")
+
+
+    os.remove(processed_image_path)
+    
+    return {"Count": count_text, "Processed_Image_URL": processed_image_url}
+
+@app.post("/count-with-yolo")
+async def count_with_yolo(
+    request: Request,
+    count_request: CountRequest,
+    admin: User = Depends(get_current_admin_user)
+):
+    
+    original_image_url = await save_base64_image(count_request.base64_image)
+
+    processed_img, count_text = count_objects_with_yolo(count_request.base64_image)
+    # print(type(processed_img), type(count_text), count_text)    
+    processed_img = cv2.cvtColor(processed_img, cv2.COLOR_BGR2RGB)
     processed_pil = Image.fromarray(processed_img)
     processed_image_path = f"../static/processed_{uuid.uuid4()}.png"
     processed_pil.save(processed_image_path)

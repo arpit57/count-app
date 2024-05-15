@@ -3,4 +3,4 @@ static/*
 app/__pycache__
 playground-1.mongodb.js
 app/utils
-test/
+test
