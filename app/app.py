@@ -243,8 +243,11 @@ async def associate_user(
     admin.associated_users.append(user_email)
     await admin.save()
 
-    return {"message": "User successfully associated"}
+    # Copy the counts data from admin to user
+    target_user.counts = admin.counts
+    await target_user.save()
 
+    return {"message": "User successfully associated and data copied"}
 
 @app.patch("/manual-count")
 async def update_count(
