@@ -40,6 +40,7 @@ class User(BeanieBaseUser, Document):
     role: str = Field(default="user")
     count_requests: List[Dict[str, Any]] = Field(default_factory=list)
     associated_users: List[str] = Field(default_factory=list)
+    session_active: bool = Field(default=False)
 
 
 async def get_user_db():

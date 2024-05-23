@@ -159,12 +159,30 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials"
         )
 
+    if user.session_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You are already logged in from another device",
+        )
+
     jwt_strategy = auth_backend.get_strategy()
     access_token = await jwt_strategy.write_token(user)
+
+    await user.set({"session_active": True})  # Set session_active to True
 
     return TokenResponse(
         access_token=str(access_token), token_type="bearer", role=user.role
     )
+
+
+@auth_router.post("/jwt/logout")
+async def logout(user: User = Depends(current_active_user)):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
+    await user.set({"session_active": False})  # Set session_active to False
+    return JSONResponse(content={"message": "Successfully logged out"})
 
 
 @auth_router.get("/verify")
