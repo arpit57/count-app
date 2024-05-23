@@ -5,20 +5,33 @@ from email.mime.text import MIMEText
 from typing import Optional
 import logging
 from beanie import PydanticObjectId
-from fastapi import Depends, Request, APIRouter#, Query
+from fastapi import Depends, Request, APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi_users import BaseUserManager, FastAPIUsers
-from fastapi_users.authentication import AuthenticationBackend, BearerTransport, JWTStrategy
+from fastapi_users.authentication import (
+    AuthenticationBackend,
+    BearerTransport,
+    JWTStrategy,
+)
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users.db import BeanieUserDatabase, ObjectIDIDMixin
 from db import User, get_user_db
 from datetime import timedelta
 from utils.token_handler import generate_jwt, decode_jwt
+from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 SECRET = "SECRET"
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    role: str
+
 
 class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
     reset_password_token_secret = SECRET
@@ -32,8 +45,8 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
     async def verify_token(self, token: str):
         # Verifies the token and if valid, activates the user
         claims = decode_jwt(token, self.verification_token_secret)
-        if claims and 'user_id' in claims:
-            user_id = claims['user_id']
+        if claims and "user_id" in claims:
+            user_id = claims["user_id"]
             user = await self.get(user_id)
             if user and not user.is_verified:
                 # Use Beanie's document update methods
@@ -43,7 +56,7 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         token = self.generate_verification_token(user)
-        
+
         # Send email verification
         await self.send_verification_email(user.email, token)
         logger.info(f"Verification email sent to {user.email}.")
@@ -58,19 +71,21 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
         body = f"Please click the following link to verify your email: <a href='{verification_url}'>{verification_url}</a>"
         sender_email = "helpdesk@alluvium.in"
         recipient_email = email
-        
-        msg = MIMEText(body, 'html')
+
+        msg = MIMEText(body, "html")
         msg["Subject"] = subject
         msg["From"] = sender_email
         msg["To"] = recipient_email
-        
+
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
             server.login(smtp_username, smtp_password)
             server.sendmail(sender_email, [recipient_email], msg.as_string())
         logger.info(f"Verification email sent to {recipient_email}.")
 
-    async def on_after_forgot_password(self, user: User, token: str, request: Optional[Request] = None):
+    async def on_after_forgot_password(
+        self, user: User, token: str, request: Optional[Request] = None
+    ):
         # Send email to the user with the reset password token
         await self.send_reset_password_email(user.email, token)
         logger.info(f"Reset password token sent to {user.email}")
@@ -86,7 +101,7 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
         body = f"Click the following link to reset your password: <a href='{reset_password_url}'>Reset Password</a>"
         sender_email = "helpdesk@alluvium.in"
         recipient_email = email
-        msg = MIMEText(body, 'html')
+        msg = MIMEText(body, "html")
         msg["Subject"] = subject
         msg["From"] = sender_email
         msg["To"] = recipient_email
@@ -97,19 +112,28 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
                 server.sendmail(sender_email, [recipient_email], msg.as_string())
             logger.info(f"Password reset email sent to {recipient_email}.")
         except Exception as e:
-            logger.error(f"Failed to send password reset email to {recipient_email}: {e}")
+            logger.error(
+                f"Failed to send password reset email to {recipient_email}: {e}"
+            )
 
-    async def on_after_request_verify(self, user: User, token: str, request: Optional[Request] = None):
-        logger.info(f"Verification requested for user {user.id}. Verification token: {token}")
+    async def on_after_request_verify(
+        self, user: User, token: str, request: Optional[Request] = None
+    ):
+        logger.info(
+            f"Verification requested for user {user.id}. Verification token: {token}"
+        )
 
 
 async def get_user_manager(user_db: BeanieUserDatabase = Depends(get_user_db)):
     yield UserManager(user_db)
 
+
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
+
 
 def get_jwt_strategy() -> JWTStrategy:
     return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+
 
 auth_backend = AuthenticationBackend(
     name="jwt",
@@ -123,6 +147,26 @@ current_active_user = fastapi_users.current_user(active=True)
 # Create a new router for the auth routes
 auth_router = APIRouter()
 
+
+@auth_router.post("/jwt/login", response_model=TokenResponse)
+async def login(
+    request: OAuth2PasswordRequestForm = Depends(),
+    user_manager: UserManager = Depends(get_user_manager),
+):
+    user = await user_manager.authenticate(request)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials"
+        )
+
+    jwt_strategy = auth_backend.get_strategy()
+    access_token = await jwt_strategy.write_token(user)
+
+    return TokenResponse(
+        access_token=str(access_token), token_type="bearer", role=user.role
+    )
+
+
 @auth_router.get("/verify")
 async def verify(token: str, user_manager: UserManager = Depends(get_user_manager)):
     # Logic to verify the token and activate the user
@@ -130,4 +174,6 @@ async def verify(token: str, user_manager: UserManager = Depends(get_user_manage
     if result:
         return JSONResponse(content={"message": "Email verified successfully."})
     else:
-        return JSONResponse(content={"error": "Invalid or expired token."}, status_code=400)
+        return JSONResponse(
+            content={"error": "Invalid or expired token."}, status_code=400
+        )

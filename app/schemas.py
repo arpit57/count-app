@@ -1,18 +1,19 @@
-#app/schemas.py
+# app/schemas.py
 
 from beanie import PydanticObjectId
 from fastapi_users import schemas
 from typing import Optional
-from db import User
 from pydantic import validator, Field
+
 
 class UserRead(schemas.BaseUser[PydanticObjectId]):
     pass
 
+
 class UserCreate(schemas.BaseUserCreate):
     role: Optional[str] = Field(default="user", example="user")
 
-    @validator('password')
+    @validator("password")
     def validate_password_complexity(cls, value):
         if len(value) < 8:
             raise ValueError("Password must be at least 8 characters long")
@@ -23,10 +24,11 @@ class UserCreate(schemas.BaseUserCreate):
         if not any(char.islower() for char in value):
             raise ValueError("Password must contain at least one lowercase letter")
         if not any(char in "!@#$%^&*()" for char in value):
-            raise ValueError("Password must contain at least one special character (!@#$%^&*())")
+            raise ValueError(
+                "Password must contain at least one special character (!@#$%^&*())"
+            )
         return value
-class UserUpdate(schemas.BaseUserUpdate):
-    pass
 
-class UserDB(User):
+
+class UserUpdate(schemas.BaseUserUpdate):
     pass

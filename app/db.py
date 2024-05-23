@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 # Database configuration
 DATABASE_URL = "mongodb+srv://alvisionpi:k91f0hxBQ0DeX3OW@atlascluster.2jvy8lq.mongodb.net/alvisionpi?retryWrites=true"
 
+
 def get_database_client():
     """Create and return a MongoDB client instance, handling any exceptions."""
     try:
@@ -24,11 +25,14 @@ def get_database_client():
         logger.error(f"Error connecting to MongoDB: {e}")
         return None  # Or raise an exception if you prefer to handle it higher up
 
+
 client = get_database_client()
 db = client["alvisionpi"] if client else None
 
+
 class OAuthAccount(BaseOAuthAccount):
     pass
+
 
 class User(BeanieBaseUser, Document):
     counts: List[Dict[str, Any]] = Field(default_factory=list)
@@ -37,8 +41,10 @@ class User(BeanieBaseUser, Document):
     count_requests: List[Dict[str, Any]] = Field(default_factory=list)
     associated_users: List[str] = Field(default_factory=list)
 
+
 async def get_user_db():
     logger.info("Retrieving user database")
     yield BeanieUserDatabase(User, OAuthAccount)
+
 
 logger.info("Database connection initialized")
