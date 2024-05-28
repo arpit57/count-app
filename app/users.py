@@ -68,7 +68,7 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
         smtp_password = "ooxi zbye qrvn smpj"
         subject = "Email Verification"
         verification_url = f"http://127.0.0.1:8000/auth/verify?token={token}"
-        body = f"Please click the following link to verify your email: <a href='{verification_url}'>{verification_url}</a>"
+        body = f"Please click the following link to verify your email: <a href='{verification_url}'>Verify</a>"
         sender_email = "helpdesk@alluvium.in"
         recipient_email = email
 
@@ -132,7 +132,7 @@ bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 
 def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=None)  # No sesison timeout
+    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)  # No sesison timeout
 
 
 auth_backend = AuthenticationBackend(
