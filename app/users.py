@@ -67,7 +67,7 @@ class UserManager(ObjectIDIDMixin, BaseUserManager[User, PydanticObjectId]):
         smtp_username = "helpdesk@alluvium.in"
         smtp_password = "ooxi zbye qrvn smpj"
         subject = "Email Verification"
-        verification_url = f"http://127.0.0.1:8000/auth/verify?token={token}"
+        verification_url = f"http://35.154.136.249:8000/auth/verify?token={token}"
         body = f"Please click the following link to verify your email: <a href='{verification_url}'>Verify</a>"
         sender_email = "helpdesk@alluvium.in"
         recipient_email = email
