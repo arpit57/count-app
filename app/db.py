@@ -1,9 +1,10 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import logging
 import motor.motor_asyncio
 from beanie import Document
 from fastapi_users.db import BaseOAuthAccount, BeanieBaseUser, BeanieUserDatabase
 from pydantic import Field
+from datetime import datetime
 
 # Logger configuration
 logging.basicConfig(level=logging.INFO)
@@ -41,6 +42,9 @@ class User(BeanieBaseUser, Document):
     count_requests: List[Dict[str, Any]] = Field(default_factory=list)
     associated_users: List[str] = Field(default_factory=list)
     session_active: bool = Field(default=False)
+    subscription_id: Optional[str] = Field(default=None)
+    subscription_status: Optional[str] = Field(default=None)
+    subscription_start_date: Optional[datetime] = Field(default=None)
 
 
 async def get_user_db():

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Razorpay Payment Integration</title>
+    <style>
+        body {
+            text-align: center;
+            font-size: xx-large;
+        }
+
+        h1 {
+            color: blue;
+            font-size: xx-large;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Subscribe to AlVision Count</h1>
+    <form action="/">
+        <script src="https://checkout.razorpay.com/v1/checkout.js" data-key="rzp_test_QAOBqeANjqCzYY" data-amount="100"
+            data-name="Alvision Count">
+            </script>
+        <input type="hidden" name="shopping_order_id" value="21">
+    </form>
+</body>
+
+</html>
