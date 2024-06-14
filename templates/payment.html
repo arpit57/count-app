@@ -19,11 +19,12 @@
 
 <body>
     <h1>Subscribe to AlVision Count</h1>
-    <form action="/">
-        <script src="https://checkout.razorpay.com/v1/checkout.js" data-key="rzp_test_QAOBqeANjqCzYY" data-amount="100"
-            data-name="Alvision Count">
+    <form action="http://localhost:8000/payment/success" method="POST">
+        <script src="https://checkout.razorpay.com/v1/checkout.js" data-key="rzp_live_U25IYhPZcwoSMs" data-amount="100"
+            data-name="Alvision Count" data-prefill.name="name from server">
             </script>
-        <input type="hidden" name="shopping_order_id" value="21">
+        <input type="hidden" name="token" value="{{ token }}">
+        <input type="hidden" name="order_id" value="{{ order_id }}">
     </form>
 </body>
 

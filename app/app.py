@@ -340,33 +340,33 @@ async def get_user_counts_by_date(
 
 
 razorpay_client = razorpay.Client(
-    auth=("rzp_test_QAOBqeANjqCzYY", "TdM9M2Q6amG2hhIYflL342sx")
+    auth=("rzp_live_U25IYhPZcwoSMs", "6bNC28fmre57FBUmhSLcZjUw")
 )
 
 
 @app.get("/payment", response_class=HTMLResponse)
-async def payment_page(request: Request):
-    print("started executing /payment")
-    # Generate order ID
-    order_amount = 10000  # Amount in paise (e.g., 10000 paise = 100 INR)
-    order_currency = "INR"
-    order_receipt = "order_rcptid_11"
-    order_data = {
-        "amount": order_amount,
-        "currency": order_currency,
-        "receipt": order_receipt,
-        "payment_capture": 1,
-    }
-    print("order_data", order_data)
+async def payment_page(request: Request, user: User = Depends(current_active_user)):
+    # Generate the JWT token and order details as per previous logic
+    jwt_strategy = auth_backend.get_strategy()
     try:
+        access_token = await jwt_strategy.write_token(user)
+        order_data = {
+            "amount": 10000,  # Amount in paise
+            "currency": "INR",
+            "receipt": "order_rcptid_11",
+            "payment_capture": 1,
+        }
         order = razorpay_client.order.create(data=order_data)
         order_id = order["id"]
     except Exception as e:
-        logger.error(f"Error creating order: {e}")
-        return HTMLResponse(content="Error creating order", status_code=500)
-    print("before returning templates")
+        return HTMLResponse(
+            content=f"Error in processing payment: {e}", status_code=500
+        )
+
+    # Render the payment.html template with the necessary context variables
     return templates.TemplateResponse(
-        "payment.html", {"request": request, "order_id": order_id}
+        "payment.html",
+        {"request": request, "order_id": order_id, "token": access_token},
     )
 
 
