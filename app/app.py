@@ -3,7 +3,7 @@
 import logging
 from beanie import init_beanie
 from fastapi import Depends, FastAPI, Request, HTTPException, Body, Form
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from db import User, db
 from schemas import UserCreate, UserRead, UserUpdate
@@ -346,17 +346,14 @@ razorpay_client = razorpay.Client(
 
 @app.get("/payment", response_class=HTMLResponse)
 async def payment_page(request: Request, user: User = Depends(current_active_user)):
-    # Generate the JWT token and order details as per previous logic
-    jwt_strategy = auth_backend.get_strategy()
     try:
-        access_token = await jwt_strategy.write_token(user)
         order_data = {
             "amount": 10000,  # Amount in paise
             "currency": "INR",
-            "receipt": "order_rcptid_11",
             "payment_capture": 1,
         }
         order = razorpay_client.order.create(data=order_data)
+        # print(order)
         order_id = order["id"]
     except Exception as e:
         return HTMLResponse(
@@ -366,39 +363,32 @@ async def payment_page(request: Request, user: User = Depends(current_active_use
     # Render the payment.html template with the necessary context variables
     return templates.TemplateResponse(
         "payment.html",
-        {"request": request, "order_id": order_id, "token": access_token},
+        {"request": request, "email": user.email, "order_id": order_id},
     )
 
 
 @app.post("/payment/success")
 async def payment_success(
-    request: Request,
-    razorpay_payment_id: str = Form(...),
-    razorpay_order_id: str = Form(...),
-    razorpay_signature: str = Form(...),
-    user: User = Depends(current_active_user),
+    request: Request, email: str = Form(...), order_id: str = Form(...)
 ):
-    # Verify the payment signature
     try:
-        razorpay_client.utility.verify_payment_signature(
-            {
-                "razorpay_order_id": razorpay_order_id,
-                "razorpay_payment_id": razorpay_payment_id,
-                "razorpay_signature": razorpay_signature,
-            }
-        )
+        user = await User.find_one(User.email == email)
+        IST_OFFSET = timedelta(hours=5, minutes=30)
+        if user:
+            user.subscription_id = order_id
+            user.subscription_status = "active"
+            user.subscription_start_date = datetime.utcnow() + IST_OFFSET
 
-        # Update user's subscription details
-        user.subscription_id = razorpay_order_id
-        user.subscription_status = "active"
-        user.subscription_start_date = datetime.utcnow()
-        await user.save()
-
-        logger.info("Subscription details updated successfully")
-        return {"status": "Payment successful and subscription updated"}
-    except razorpay.errors.SignatureVerificationError:
-        logger.error("Payment verification failed")
-        return {"status": "Payment verification failed"}
+            await user.save()
+            return JSONResponse(
+                content={"message": "you're now subscribed to alvision count"},
+                status_code=200,
+            )
+        else:
+            raise HTTPException(status_code=404, detail="User not found")
+    except Exception as e:
+        logger.error(f"Error processing payment success: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.get("/no-of-requests")
