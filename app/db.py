@@ -44,6 +44,7 @@ class User(BeanieBaseUser, Document):
     session_active: bool = Field(default=False)
     subscription_id: Optional[str] = Field(default=None)
     subscription_status: Optional[str] = Field(default=None)
+    subscription_type: Optional[str] = Field(default=None)
     subscription_start_date: Optional[datetime] = Field(default=None)
 
 

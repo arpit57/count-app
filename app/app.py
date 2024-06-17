@@ -2,7 +2,7 @@
 
 import logging
 from beanie import init_beanie
-from fastapi import Depends, FastAPI, Request, HTTPException, Body, Form
+from fastapi import Depends, FastAPI, Request, HTTPException, Body, Form, Query
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from db import User, db
@@ -345,10 +345,14 @@ razorpay_client = razorpay.Client(
 
 
 @app.get("/payment", response_class=HTMLResponse)
-async def payment_page(request: Request, user: User = Depends(current_active_user)):
+async def payment_page(
+    request: Request,
+    user: User = Depends(current_active_user),
+    subscription_type: str = Query(..., regex="^(monthly|yearly)$"),
+):
     try:
         order_data = {
-            "amount": 10000,  # Amount in paise
+            "amount": 100,  # Amount in paise
             "currency": "INR",
             "payment_capture": 1,
         }
@@ -363,13 +367,22 @@ async def payment_page(request: Request, user: User = Depends(current_active_use
     # Render the payment.html template with the necessary context variables
     return templates.TemplateResponse(
         "payment.html",
-        {"request": request, "email": user.email, "order_id": order_id},
+        {
+            "request": request,
+            "email": user.email,
+            "order_id": order_id,
+            "subscription_type": subscription_type,
+            "amount": 100 if subscription_type == "monthly" else 200,
+        },
     )
 
 
 @app.post("/payment/success")
 async def payment_success(
-    request: Request, email: str = Form(...), order_id: str = Form(...)
+    request: Request,
+    email: str = Form(...),
+    order_id: str = Form(...),
+    subscription_type: str = Form(...),
 ):
     try:
         user = await User.find_one(User.email == email)
@@ -377,11 +390,16 @@ async def payment_success(
         if user:
             user.subscription_id = order_id
             user.subscription_status = "active"
+            user.subscription_type = subscription_type
             user.subscription_start_date = datetime.utcnow() + IST_OFFSET
 
             await user.save()
+            if subscription_type == "yearly":
+                message = "you're now subscribed to alvision count yearly plan"
+            else:
+                message = "you're now subscribed to alvision count monthly plan"
             return JSONResponse(
-                content={"message": "you're now subscribed to alvision count"},
+                content={"message": message},
                 status_code=200,
             )
         else:
