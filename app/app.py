@@ -409,6 +409,26 @@ async def payment_success(
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
+@app.get("/subscription-check")
+async def subscription_check(user: User = Depends(current_active_user)):
+    start_date = user.subscription_start_date
+
+    if user.subscription_type == "monthly":
+        end_date = start_date + timedelta(days=30)
+    else:
+        end_date = start_date + timedelta(days=365)
+
+    days_remaining = (end_date - datetime.now()).days
+
+    return {
+        "subscription_status": user.subscription_status,
+        "subscription_type": user.subscription_type,
+        "start_date": start_date,
+        "end_date": end_date.strftime("%Y-%m-%d"),
+        "days_remaining": days_remaining,
+    }
+
+
 @app.get("/no-of-requests")
 async def get_no_of_requests(date: date):
     users = await User.find().to_list()
