@@ -6,3 +6,4 @@ app/utils
 test
 get-pip.py
 .vscode
+app/.env

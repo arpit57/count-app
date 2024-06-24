@@ -24,6 +24,7 @@ from detect_circles_yolo import count_objects_with_yolo
 from aws_config import AWSConfig
 from utils.system_logger import log_request_stats as log_system_stats
 import razorpay
+from dotenv import load_dotenv
 
 app = FastAPI()
 
@@ -339,9 +340,13 @@ async def get_user_counts_by_date(
     return filtered_counts
 
 
-razorpay_client = razorpay.Client(
-    auth=("rzp_live_U25IYhPZcwoSMs", "6bNC28fmre57FBUmhSLcZjUw")
-)
+dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
+load_dotenv(dotenv_path)
+
+rzp_api_key = os.getenv("RAZORPAY_API_KEY")
+rzp_secret_key = os.getenv("RAZORPAY_SECRET_KEY")
+
+razorpay_client = razorpay.Client(auth=(rzp_api_key, rzp_secret_key))
 
 
 @app.get("/payment", response_class=HTMLResponse)
@@ -350,6 +355,8 @@ async def payment_page(
     user: User = Depends(current_active_user),
     subscription_type: str = Query(..., regex="^(monthly|yearly)$"),
 ):
+    print("API Key:", rzp_api_key)
+    print("Secret Key:", rzp_secret_key)
     try:
         order_data = {
             "amount": 100,  # Amount in paise
@@ -373,6 +380,7 @@ async def payment_page(
             "order_id": order_id,
             "subscription_type": subscription_type,
             "amount": 100 if subscription_type == "monthly" else 200,
+            "razorpay_key": rzp_api_key,
         },
     )
 
@@ -388,10 +396,13 @@ async def payment_success(
         user = await User.find_one(User.email == email)
         IST_OFFSET = timedelta(hours=5, minutes=30)
         if user:
-            user.subscription_id = order_id
-            user.subscription_status = "active"
-            user.subscription_type = subscription_type
-            user.subscription_start_date = datetime.utcnow() + IST_OFFSET
+            if user.subscription_status == "active" and user.subscription_type:
+                user.subscription_type.append(subscription_type)
+            else:
+                user.subscription_id = order_id
+                user.subscription_status = "active"
+                user.subscription_type = [subscription_type]
+                user.subscription_start_date = datetime.utcnow() + IST_OFFSET
 
             await user.save()
             if subscription_type == "yearly":
