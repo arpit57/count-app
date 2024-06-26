@@ -423,13 +423,23 @@ async def payment_success(
 @app.get("/subscription-check")
 async def subscription_check(user: User = Depends(current_active_user)):
     start_date = user.subscription_start_date
+    subscription_days = 0
 
-    if user.subscription_type == "monthly":
-        end_date = start_date + timedelta(days=30)
+    for period in user.subscription_type:
+        if period == "yearly":
+            subscription_days += 365
+        else:
+            subscription_days += 30
+
+    end_date = start_date + timedelta(days=subscription_days)
+
+    if (end_date - datetime.now()).days < 0:
+        user.subscription_status = "inactive"
+        user.subscription_type = []
+        await user.save()
+        days_remaining = 0
     else:
-        end_date = start_date + timedelta(days=365)
-
-    days_remaining = (end_date - datetime.now()).days
+        days_remaining = (end_date - datetime.now()).days
 
     return {
         "subscription_status": user.subscription_status,
