@@ -355,8 +355,8 @@ async def payment_page(
     user: User = Depends(current_active_user),
     subscription_type: str = Query(..., regex="^(monthly|yearly)$"),
 ):
-    print("API Key:", rzp_api_key)
-    print("Secret Key:", rzp_secret_key)
+    if subscription_type not in ["monthly", "yearly"]:
+        raise HTTPException(status_code=400, detail="Invalid subscription type")
     try:
         order_data = {
             "amount": 100,  # Amount in paise
@@ -428,8 +428,12 @@ async def subscription_check(user: User = Depends(current_active_user)):
     for period in user.subscription_type:
         if period == "yearly":
             subscription_days += 365
-        else:
+        elif period == "monthly":
             subscription_days += 30
+        elif period == "trial":
+            subscription_days += 7
+        else:
+            raise HTTPException(status_code=400, detail="Invalid subscription type")
 
     end_date = start_date + timedelta(days=subscription_days)
 

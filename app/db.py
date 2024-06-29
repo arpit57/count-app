@@ -4,7 +4,7 @@ import motor.motor_asyncio
 from beanie import Document
 from fastapi_users.db import BaseOAuthAccount, BeanieBaseUser, BeanieUserDatabase
 from pydantic import Field
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Logger configuration
 logging.basicConfig(level=logging.INFO)
@@ -29,6 +29,7 @@ def get_database_client():
 
 client = get_database_client()
 db = client["alvisionpi"] if client else None
+IST_OFFSET = timedelta(hours=5, minutes=30)
 
 
 class OAuthAccount(BaseOAuthAccount):
@@ -43,9 +44,11 @@ class User(BeanieBaseUser, Document):
     associated_users: List[str] = Field(default_factory=list)
     session_active: bool = Field(default=False)
     subscription_id: Optional[str] = Field(default=None)
-    subscription_status: Optional[str] = Field(default=None)
-    subscription_type: Optional[List[str]] = Field(default=None)
-    subscription_start_date: Optional[datetime] = Field(default=None)
+    subscription_status: Optional[str] = Field(default="active")
+    subscription_type: Optional[List[str]] = Field(default=["trial"])
+    subscription_start_date: Optional[datetime] = Field(
+        default_factory=lambda: datetime.utcnow() + IST_OFFSET
+    )
 
 
 async def get_user_db():
